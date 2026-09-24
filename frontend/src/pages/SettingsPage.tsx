@@ -24,7 +24,7 @@ export const SettingsPage: React.FC = () => {
           <span>Official Emergency Authorities Notice</span>
         </div>
         <p className="text-xs text-slate-300 leading-relaxed">
-          FloodGuard AI is a <strong>research prototype early warning framework</strong> operating on deterministic simulated atmospheric data. For real-life emergency response, evacuations, and official flood bulletins in the National Capital Region, refer strictly to the designated statutory authorities:
+          FloodShield is a <strong>research prototype early warning framework</strong> operating on deterministic simulated atmospheric data. For real-life emergency response, evacuations, and official flood bulletins in the National Capital Region, refer strictly to the designated statutory authorities:
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <a

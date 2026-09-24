@@ -85,7 +85,7 @@ export const Header: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-lg text-white tracking-tight">FloodGuard AI</h1>
+              <h1 className="font-extrabold text-lg text-white tracking-tight">FloodShield</h1>
               <span className="text-[10px] bg-cyan-500/10 text-cyan-400 font-semibold px-2 py-0.5 rounded-full border border-cyan-500/20">
                 v2.0 Operations
               </span>

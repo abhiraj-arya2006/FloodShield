@@ -1,4 +1,4 @@
-# FloodGuard AI — Project Plan (Milestone 1)
+# FloodShield — Project Plan (Milestone 1)
 
 ## 1. Milestones Overview
 

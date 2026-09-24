@@ -3,7 +3,7 @@ from typing import List
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "FloodGuard AI"
+    PROJECT_NAME: str = "FloodShield"
     VERSION: str = "0.2.0"
     API_V1_STR: str = "/api"
     SIMULATION_MODE: bool = True

@@ -4,7 +4,7 @@ import pandas as pd
 from typing import Dict, Any, List, Tuple
 
 class FloodModel(abc.ABC):
-    """Abstract interface for FloodGuard AI prediction models."""
+    """Abstract interface for FloodShield prediction models."""
     
     @abc.abstractmethod
     def predict(self, features_df: pd.DataFrame) -> Dict[str, np.ndarray]:

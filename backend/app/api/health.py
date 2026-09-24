@@ -10,7 +10,7 @@ def get_health():
     """System health, component freshness, and simulation status."""
     return {
         "status": "healthy",
-        "service": "FloodGuard AI",
+        "service": "FloodShield",
         "version": settings.VERSION,
         "is_simulated": True,
         "simulation_mode": settings.SIMULATION_MODE,

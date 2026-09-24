@@ -1,4 +1,4 @@
-# FloodGuard AI - Alert Policy Configuration
+# FloodShield - Alert Policy Configuration
 # Simulation rules, cooldowns, and multi-language notification templates.
 
 alert_policy:

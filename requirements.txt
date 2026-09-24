@@ -1,4 +1,4 @@
-# FloodGuard AI - Milestone 1 Dependencies
+# FloodShield - Milestone 1 Dependencies
 # Pinned for reproducibility and stability
 fastapi>=0.110.0,<1.0.0
 uvicorn[standard]>=0.28.0,<1.0.0

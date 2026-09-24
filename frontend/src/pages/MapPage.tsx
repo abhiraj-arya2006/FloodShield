@@ -45,7 +45,7 @@ export const MapPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `floodguard_delhi_ncr_${Date.now()}.geojson`;
+    a.download = `floodshield_delhi_ncr_${Date.now()}.geojson`;
     a.click();
   };
 
@@ -72,7 +72,7 @@ export const MapPage: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `floodguard_risk_data_${Date.now()}.csv`;
+    a.download = `floodshield_risk_data_${Date.now()}.csv`;
     a.click();
   };
 

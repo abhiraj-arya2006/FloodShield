@@ -1,12 +1,12 @@
-# FloodGuard AI — Urban Flood Early Warning System (Delhi NCR)
+# FloodShield — Urban Flood Early Warning System (Delhi NCR)
 
-> **Simulation Disclaimer**: FloodGuard AI Milestone 1 is a research prototype operating on deterministic simulated atmospheric and hydrological data. Every screen, API response, and alert contains explicit simulation markers. It does not issue official warnings. For real emergencies, refer to the India Meteorological Department (IMD) and Delhi Disaster Management Authority (DDMA).
+> **Simulation Disclaimer**: FloodShield Milestone 1 is a research prototype operating on deterministic simulated atmospheric and hydrological data. Every screen, API response, and alert contains explicit simulation markers. It does not issue official warnings. For real emergencies, refer to the India Meteorological Department (IMD) and Delhi Disaster Management Authority (DDMA).
 
 ---
 
 ## System Overview
 
-FloodGuard AI predicts urban flood likelihood across Delhi NCR at a 500-meter grid resolution 1 to 6 hours in advance. It integrates:
+FloodShield predicts urban flood likelihood across Delhi NCR at a 500-meter grid resolution 1 to 6 hours in advance. It integrates:
 - **Atmospheric Scenarios**: Moving storm cells with spatial Gaussian falloff and temporal growth/decay curves.
 - **Topography & Hydrology**: High ground along the Aravalli ridge, Yamuna floodplain depressions, and Najafgarh drain basins.
 - **Physical Runoff & Infiltration**: Manning-based drainage evacuation, impervious surface ratios, and Height Above Nearest Drainage (HAND).

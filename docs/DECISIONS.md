@@ -1,4 +1,4 @@
-# FloodGuard AI — Architecture & Design Decisions Log
+# FloodShield — Architecture & Design Decisions Log
 
 This document records key design decisions, trade-offs, and defaults chosen during development.
 

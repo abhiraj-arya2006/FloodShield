@@ -1,4 +1,4 @@
-# FloodGuard AI - Development & Operations Makefile
+# FloodShield - Development & Operations Makefile
 
 .PHONY: help setup dev test lint seed train-synthetic clean
 
@@ -17,7 +17,7 @@ setup:
 	cd frontend && npm install
 
 dev:
-	@echo "Starting FloodGuard AI backend and frontend..."
+	@echo "Starting FloodShield backend and frontend..."
 	python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 
 test:
