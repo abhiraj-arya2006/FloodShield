@@ -1,0 +1,4 @@
+# Milestone 6+: Deep Learning and MLOps Requirements
+torch>=2.2.0
+torch-geometric>=2.5.0
+mlflow>=2.11.0

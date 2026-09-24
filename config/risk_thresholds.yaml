@@ -1,0 +1,48 @@
+# FloodGuard AI - Risk Thresholds Configuration
+# NOTE: All values are placeholders for prototype simulation and do NOT constitute official policy.
+
+thresholds:
+  low:
+    max: 0.25
+    color: "#22c55e" # Green
+    label: "LOW"
+    description: "Minimal surface water accumulation expected."
+    recommended_attention: "Routine monitoring."
+  moderate:
+    min: 0.25
+    max: 0.50
+    color: "#eab308" # Yellow
+    label: "MODERATE"
+    description: "Localized ponding possible on roads and low-lying intersections."
+    recommended_attention: "Inspect critical drainage nodes and underpasses."
+  high:
+    min: 0.50
+    max: 0.75
+    color: "#f97316" # Orange
+    label: "HIGH"
+    description: "Significant pluvial/fluvial flooding likely. Disruptions to transit."
+    recommended_attention: "Pre-position mobile dewatering pumps; alert emergency traffic units."
+  critical:
+    min: 0.75
+    max: 1.00
+    color: "#ef4444" # Red
+    label: "CRITICAL"
+    description: "Severe widespread inundation endangering life, property, and critical infrastructure."
+    recommended_attention: "Immediate emergency response; evacuate low-lying settlements."
+
+hysteresis:
+  # Hysteresis margin prevents flickering when probability oscillates around a boundary
+  margin: 0.03
+  min_state_dwell_seconds: 60
+
+weights:
+  # Priority Score = f(hazard, exposure, vulnerability)
+  hazard: 0.50
+  exposure: 0.35
+  vulnerability: 0.15
+
+river_levels:
+  # Yamuna at Delhi Old Railway Bridge (meters above MSL)
+  warning_level_meters: 204.5
+  danger_level_meters: 205.33
+  evacuation_level_meters: 206.0

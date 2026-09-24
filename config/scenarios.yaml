@@ -1,0 +1,113 @@
+# FloodGuard AI - Simulation Scenarios
+# Deterministic atmospheric and hydrological event profiles for Delhi NCR.
+
+scenarios:
+  dry_day:
+    id: "dry_day"
+    name: "Clear / Dry Day"
+    category: "BASELINE"
+    description: "Standard dry post-winter day with zero precipitation. Baseline for false alarm checking."
+    duration_hours: 12
+    base_rainfall_mm_h: 0.0
+    storm_cells: []
+    upstream_river_stage_m: 202.8 # Well below warning level (204.5m)
+    soil_moisture_initial: 0.15
+    drain_blockage_baseline: 0.05
+
+  thunderstorm:
+    id: "thunderstorm"
+    name: "Pre-Monsoon Thunderstorm"
+    category: "PLUVIAL"
+    description: "Short, highly intense localized convective cell sweeping northwest over Gurugram and South Delhi."
+    duration_hours: 6
+    base_rainfall_mm_h: 4.0
+    storm_cells:
+      - id: "cell_thunder_1"
+        start_hour: 1.0
+        peak_hour: 2.5
+        end_hour: 4.5
+        peak_intensity_mm_h: 68.0
+        center_lat: 28.46
+        center_lon: 77.03
+        radius_km: 7.5
+        velocity_km_h: 18.0
+        bearing_deg: 45.0 # Moving northeast
+    upstream_river_stage_m: 203.2
+    soil_moisture_initial: 0.30
+    drain_blockage_baseline: 0.15
+
+  monsoon_continuous:
+    id: "monsoon_continuous"
+    name: "Sustained Monsoon Rain"
+    category: "WIDESPREAD"
+    description: "Broad-scale persistent monsoon depression covering the entire NCR with steady moderate to heavy rainfall."
+    duration_hours: 24
+    base_rainfall_mm_h: 22.0
+    storm_cells:
+      - id: "cell_monsoon_north"
+        start_hour: 0.0
+        peak_hour: 6.0
+        end_hour: 18.0
+        peak_intensity_mm_h: 45.0
+        center_lat: 28.70
+        center_lon: 77.15
+        radius_km: 22.0
+        velocity_km_h: 8.0
+        bearing_deg: 90.0
+      - id: "cell_monsoon_south"
+        start_hour: 2.0
+        peak_hour: 8.0
+        end_hour: 20.0
+        peak_intensity_mm_h: 52.0
+        center_lat: 28.45
+        center_lon: 77.08
+        radius_km: 18.0
+        velocity_km_h: 10.0
+        bearing_deg: 75.0
+    upstream_river_stage_m: 204.6 # Just exceeding warning level (204.5m)
+    soil_moisture_initial: 0.70
+    drain_blockage_baseline: 0.25
+
+  cloudburst:
+    id: "cloudburst"
+    name: "Severe Cloudburst"
+    category: "EXTREME_PLUVIAL"
+    description: "Violent, extreme localized downpour exceeding 100 mm/h dumping over central urban drainage basins."
+    duration_hours: 6
+    base_rainfall_mm_h: 10.0
+    storm_cells:
+      - id: "cell_cloudburst"
+        start_hour: 1.0
+        peak_hour: 2.0
+        end_hour: 3.5
+        peak_intensity_mm_h: 125.0
+        center_lat: 28.61
+        center_lon: 77.20
+        radius_km: 6.0
+        velocity_km_h: 5.0
+        bearing_deg: 30.0
+    upstream_river_stage_m: 203.9
+    soil_moisture_initial: 0.55
+    drain_blockage_baseline: 0.30
+
+  compound_surge:
+    id: "compound_surge"
+    name: "Compound River Surge + Local Rain"
+    category: "COMPOUND"
+    description: "Hathnikund barrage discharge surging Yamuna water level past danger mark while moderate-heavy local rain floods stormwater drains."
+    duration_hours: 18
+    base_rainfall_mm_h: 28.0
+    storm_cells:
+      - id: "cell_compound_east"
+        start_hour: 0.0
+        peak_hour: 4.0
+        end_hour: 12.0
+        peak_intensity_mm_h: 55.0
+        center_lat: 28.65
+        center_lon: 77.25
+        radius_km: 14.0
+        velocity_km_h: 12.0
+        bearing_deg: 160.0
+    upstream_river_stage_m: 205.8 # Exceeding danger level (205.33m)
+    soil_moisture_initial: 0.85
+    drain_blockage_baseline: 0.40

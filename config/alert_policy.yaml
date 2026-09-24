@@ -1,0 +1,57 @@
+# FloodGuard AI - Alert Policy Configuration
+# Simulation rules, cooldowns, and multi-language notification templates.
+
+alert_policy:
+  # Cooldown period in simulation seconds before repeating an alert for the same zone
+  cooldown_seconds: 1800 # 30 minutes
+  
+  # Minimum confidence threshold (0.0 to 1.0) required to trigger alerts
+  min_confidence_gate: 0.60
+  
+  # When risk escalates (e.g. MODERATE -> CRITICAL), bypass cooldown immediately
+  escalation_bypasses_cooldown: true
+  
+  # Spatial cluster radius (in meters) to group neighboring cell alerts into a single locality alert
+  cluster_radius_meters: 1500
+  
+  # Real external notification channels (SMS, Email, Push) disabled in prototype
+  channels_enabled: false
+  
+  # Expiration time for unacknowledged alerts (simulation seconds)
+  auto_expire_seconds: 7200 # 2 hours
+
+templates:
+  en:
+    prefix: "[SIMULATION] "
+    disclaimer: "SIMULATION ONLY — NOT AN OFFICIAL WARNING. Follow IMD/DDMA guidelines."
+    critical: |
+      [SIMULATION] CRITICAL FLOOD RISK
+      Zone: {zone_name} (ID: {zone_id}) · Flood Type: {flood_type}
+      Probability: {probability_pct}% ({prob_low_pct}–{prob_high_pct}%) · Confidence: {confidence_pct}%
+      Forecast: {forecast_summary}
+      Top Contributing Factors: {top_factors}
+      Model: {model_name} (version {model_version})
+    high: |
+      [SIMULATION] HIGH FLOOD RISK WARNING
+      Zone: {zone_name} (ID: {zone_id}) · Flood Type: {flood_type}
+      Probability: {probability_pct}% ({prob_low_pct}–{prob_high_pct}%) · Confidence: {confidence_pct}%
+      Forecast: {forecast_summary}
+      Top Contributing Factors: {top_factors}
+      Model: {model_name} (version {model_version})
+  hi:
+    prefix: "[सिमुलेशन] "
+    disclaimer: "केवल सिमुलेशन — कोई आधिकारिक चेतावनी नहीं है। आईएमडी/डीडीएमए निर्देशों का पालन करें।"
+    critical: |
+      [सिमुलेशन] अत्यधिक बाढ़ जोखिम चेतावनी
+      क्षेत्र: {zone_name} (आईडी: {zone_id}) · बाढ़ का प्रकार: {flood_type}
+      संभावना: {probability_pct}% ({prob_low_pct}–{prob_high_pct}%) · विश्वसनीयता: {confidence_pct}%
+      पूर्वानुमान: {forecast_summary}
+      प्रमुख कारक: {top_factors}
+      मॉडल: {model_name}
+    high: |
+      [सिमुलेशन] उच्च बाढ़ जोखिम चेतावनी
+      क्षेत्र: {zone_name} (आईडी: {zone_id}) · बाढ़ का प्रकार: {flood_type}
+      संभावना: {probability_pct}% ({prob_low_pct}–{prob_high_pct}%) · विश्वसनीयता: {confidence_pct}%
+      पूर्वानुमान: {forecast_summary}
+      प्रमुख कारक: {top_factors}
+      मॉडल: {model_name}

@@ -1,0 +1,55 @@
+{
+  "model_name": "xgboost-synthetic-v1",
+  "model_version": "1.0.0",
+  "trained_at": "2026-09-21T08:07:57.724062+00:00",
+  "trained_on": "synthetic",
+  "features": [
+    "rainfall_current",
+    "rainfall_1h",
+    "rainfall_3h",
+    "rainfall_6h",
+    "rainfall_24h",
+    "forecast_1h",
+    "forecast_3h",
+    "forecast_6h",
+    "elevation",
+    "slope",
+    "flow_accumulation",
+    "dist_to_river",
+    "dist_to_drain",
+    "twi",
+    "hand",
+    "impervious_ratio",
+    "building_density",
+    "road_density",
+    "drainage_density",
+    "soil_moisture",
+    "upstream_river_stage"
+  ],
+  "metrics": {
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "brier_score": 0.0009,
+    "expected_calibration_error": 0.0013,
+    "f1_score": 0.9987,
+    "precision": 0.9992,
+    "recall": 0.9982,
+    "confusion_matrix": [
+      [
+        27514,
+        16
+      ],
+      [
+        35,
+        19905
+      ]
+    ]
+  },
+  "hyperparameters": {
+    "n_estimators": 120,
+    "max_depth": 5,
+    "learning_rate": 0.08,
+    "subsample": 0.85
+  },
+  "disclaimer": "Trained on synthetic simulation data to validate engineering pipeline. Not for real emergency warnings."
+}

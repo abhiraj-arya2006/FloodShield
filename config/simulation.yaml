@@ -1,0 +1,27 @@
+# FloodGuard AI - Simulation Engine Global Settings
+
+region:
+  name: "Delhi NCR (Delhi + Gurugram)"
+  crs_projected: "EPSG:32643" # UTM Zone 43N
+  crs_geographic: "EPSG:4326" # WGS84
+  # Bounding box for Delhi NCR region (approximate, lat/lon)
+  bounds:
+    min_lat: 28.38 # Southern Gurugram / Badshahpur
+    max_lat: 28.88 # Northern Delhi / Narela
+    min_lon: 76.85 # Western Najafgarh / Manesar
+    max_lon: 77.38 # Eastern Yamuna bank / Anand Vihar
+  
+grid:
+  default_cell_size_m: 500 # 500 meters
+  fallback_cell_size_m: 1000 # 1000 meters if client prefers low-res
+  seed: 42
+
+clock:
+  tick_interval_seconds: 2.0 # WebSocket emit interval
+  supported_speeds: [1, 10, 60]
+  default_speed: 10
+  horizon_hours: 6
+
+logging:
+  format: "json"
+  level: "INFO"
