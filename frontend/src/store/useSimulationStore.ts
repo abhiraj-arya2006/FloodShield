@@ -15,6 +15,8 @@ interface SimulationStore {
   timezoneMode: 'IST' | 'UTC';
   wsConnected: boolean;
   lastUpdateTimestamp: string | null;
+  mapBasemap: 'carto_dark' | 'osm' | 'carto_light' | 'mapbox';
+  mapboxToken: string;
 
   // Actions
   setSelectedZoneId: (id: string | null) => void;
@@ -29,6 +31,8 @@ interface SimulationStore {
   setTimezoneMode: (mode: 'IST' | 'UTC') => void;
   setWsConnected: (connected: boolean) => void;
   setLastUpdateTimestamp: (ts: string) => void;
+  setMapBasemap: (basemap: 'carto_dark' | 'osm' | 'carto_light' | 'mapbox') => void;
+  setMapboxToken: (token: string) => void;
 }
 
 export const useSimulationStore = create<SimulationStore>((set) => ({
@@ -45,6 +49,8 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   timezoneMode: 'IST',
   wsConnected: false,
   lastUpdateTimestamp: null,
+  mapBasemap: (localStorage.getItem('floodshield_basemap') as any) || 'carto_dark',
+  mapboxToken: localStorage.getItem('floodshield_mapbox_token') || '',
 
   setSelectedZoneId: (id) => set({ selectedZoneId: id }),
   setActiveLayer: (layer) => set({ activeLayer: layer }),
@@ -65,5 +71,13 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   }),
   setTimezoneMode: (mode) => set({ timezoneMode: mode }),
   setWsConnected: (connected) => set({ wsConnected: connected }),
-  setLastUpdateTimestamp: (ts) => set({ lastUpdateTimestamp: ts })
+  setLastUpdateTimestamp: (ts) => set({ lastUpdateTimestamp: ts }),
+  setMapBasemap: (basemap) => {
+    localStorage.setItem('floodshield_basemap', basemap);
+    set({ mapBasemap: basemap });
+  },
+  setMapboxToken: (token) => {
+    localStorage.setItem('floodshield_mapbox_token', token);
+    set({ mapboxToken: token });
+  }
 }));

@@ -37,11 +37,13 @@ export const DashboardPage: React.FC = () => {
 
   // Load static zones once
   useEffect(() => {
-    fetchZones().then((res) => {
-      if (res && res.zones) {
-        setZones(res.zones);
-      }
-    });
+    fetchZones()
+      .then((res) => {
+        if (res && res.zones) {
+          setZones(res.zones);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Poll or refresh dynamic data on clock tick / scenario change
@@ -72,11 +74,13 @@ export const DashboardPage: React.FC = () => {
   // Load selected zone intelligence
   useEffect(() => {
     if (selectedZoneId) {
-      fetchZoneIntelligence(selectedZoneId).then((res) => {
-        setSelectedIntelligence(res);
-      }).catch(() => {
-        setSelectedIntelligence(null);
-      });
+      fetchZoneIntelligence(selectedZoneId)
+        .then((res) => {
+          setSelectedIntelligence(res);
+        })
+        .catch(() => {
+          setSelectedIntelligence(null);
+        });
     } else {
       setSelectedIntelligence(null);
     }
@@ -88,9 +92,9 @@ export const DashboardPage: React.FC = () => {
       <MetricCards zoneData={zoneData} />
 
       {/* Main Operations Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-180">
-        {/* Main Map View (7 cols) */}
-        <div className="lg:col-span-8 h-full flex flex-col">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:h-[calc(100vh-250px)] lg:min-h-[640px]">
+        {/* Main Map View (8 cols) */}
+        <div className="lg:col-span-8 h-[520px] lg:h-full flex flex-col min-h-[500px]">
           <FloodMap zones={zones} zoneData={zoneData} />
         </div>
 
@@ -110,7 +114,7 @@ export const DashboardPage: React.FC = () => {
                 </div>
                 <h4 className="text-xs font-bold text-slate-300">Spatial Intelligence Ready</h4>
                 <p className="text-[11px] text-slate-500 max-w-xs mt-1">
-                  Click any zone on the Delhi NCR map to inspect localized hydrology, 6h rainfall curves, and SHAP explainability.
+                  Click any 500m cell on the Delhi NCR map to inspect localized hydrology, 6h forecast, and SHAP attribution.
                 </p>
               </div>
             </div>

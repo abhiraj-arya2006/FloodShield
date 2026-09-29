@@ -39,14 +39,60 @@
   background: rgba(148, 163, 184, 0.8);
 }
 
-/* Leaflet dark theme map filter */
+/* Leaflet dark theme map styling */
 .leaflet-container {
   background-color: #090d16 !important;
   font-family: inherit;
 }
 
-.dark-tiles .leaflet-tile-pane {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+/* Only invert OSM standard light tiles if dark OSM is enabled */
+.osm-dark-tiles .leaflet-tile-pane {
+  filter: brightness(0.65) invert(1) contrast(1.5) hue-rotate(190deg) saturate(0.3) brightness(0.75);
+}
+
+/* Leaflet Tooltip Dark Theme Styling (Fixes invisible white-on-white text) */
+.leaflet-tooltip {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(51, 65, 85, 0.8) !important;
+  color: #f1f5f9 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: blur(8px) !important;
+  padding: 8px 12px !important;
+}
+
+.leaflet-tooltip-top:before {
+  border-top-color: rgba(15, 23, 42, 0.95) !important;
+}
+.leaflet-tooltip-bottom:before {
+  border-bottom-color: rgba(15, 23, 42, 0.95) !important;
+}
+.leaflet-tooltip-left:before {
+  border-left-color: rgba(15, 23, 42, 0.95) !important;
+}
+.leaflet-tooltip-right:before {
+  border-right-color: rgba(15, 23, 42, 0.95) !important;
+}
+
+/* Leaflet Zoom Controls Dark Theme */
+.leaflet-bar {
+  border: 1px solid rgba(51, 65, 85, 0.8) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.leaflet-bar a {
+  background-color: rgba(15, 23, 42, 0.9) !important;
+  color: #cbd5e1 !important;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.6) !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.2s ease !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: rgba(30, 41, 59, 1) !important;
+  color: #38bdf8 !important;
 }
 
 /* Risk level badges & pulses */

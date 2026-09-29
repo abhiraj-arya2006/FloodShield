@@ -33,50 +33,70 @@ export const Header: React.FC = () => {
   const [scenarios, setScenarios] = useState<ScenarioItem[]>([]);
 
   useEffect(() => {
-    fetchScenarios().then((res) => {
-      if (res && res.scenarios) {
-        setScenarios(res.scenarios);
-      }
-    });
+    fetchScenarios()
+      .then((res) => {
+        if (res && res.scenarios) {
+          setScenarios(res.scenarios);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleTogglePlay = async () => {
     const action = isPlaying ? 'pause' : 'play';
     setIsPlaying(!isPlaying);
-    await controlSimulation({ action });
+    try {
+      await controlSimulation({ action });
+    } catch {
+      // Graceful fallback
+    }
   };
 
   const handleSpeedChange = async (speed: number) => {
     setPlaybackSpeed(speed);
-    await controlSimulation({ action: 'set_speed', speed });
+    try {
+      await controlSimulation({ action: 'set_speed', speed });
+    } catch {
+      // Graceful fallback
+    }
   };
 
   const handleScenarioChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newScId = e.target.value;
     setSelectedScenarioId(newScId);
-    await controlSimulation({ action: 'set_scenario', scenario_id: newScId });
+    try {
+      await controlSimulation({ action: 'set_scenario', scenario_id: newScId });
+    } catch {
+      // Graceful fallback
+    }
   };
 
   const handleSeek = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const seekSec = parseFloat(e.target.value);
-    await controlSimulation({ action: 'seek', seek_seconds: seekSec });
+    try {
+      await controlSimulation({ action: 'seek', seek_seconds: seekSec });
+    } catch {
+      // Graceful fallback
+    }
   };
 
   // Format virtual time
   const simDate = simulationState?.current_time ? new Date(simulationState.current_time) : new Date();
-  const timeFormatted = timezoneMode === 'IST'
-    ? simDate.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    : simDate.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const timeFormatted =
+    timezoneMode === 'IST'
+      ? simDate.toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : simDate.toLocaleTimeString('en-US', { timeZone: 'UTC', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
 
-  const dateFormatted = timezoneMode === 'IST'
-    ? simDate.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' })
-    : simDate.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
+  const dateFormatted =
+    timezoneMode === 'IST'
+      ? simDate.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric', year: 'numeric' })
+      : simDate.toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric', year: 'numeric' });
 
   const maxSeekSeconds = (simulationState?.total_duration_hours || 24) * 3600;
   const currentElapsed = simulationState?.elapsed_seconds || 0;
 
   return (
-    <header className="bg-slate-900/90 border-b border-slate-800 px-4 py-3 sticky top-9 z-40 backdrop-blur-md">
+    <header className="bg-slate-900/95 border-b border-slate-800 px-4 py-3 z-40 backdrop-blur-md shrink-0">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         {/* Left: Branding & Status */}
         <div className="flex items-center gap-3">

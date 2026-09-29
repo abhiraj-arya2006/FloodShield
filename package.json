@@ -1,0 +1,9 @@
+{
+  "name": "floodshield",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build"
+  }
+}

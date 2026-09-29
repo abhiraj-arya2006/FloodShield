@@ -11,12 +11,17 @@ export const MapPage: React.FC = () => {
   const [zoneData, setZoneData] = useState<Record<string, CompactZoneDynamic>>({});
 
   useEffect(() => {
-    fetchZones().then((res) => {
-      if (res && res.zones) setZones(res.zones);
-    });
-    fetchFloodMap().then((res) => {
-      if (res && res.zone_data) setZoneData(res.zone_data);
-    });
+    fetchZones()
+      .then((res) => {
+        if (res && res.zones) setZones(res.zones);
+      })
+      .catch(() => {});
+
+    fetchFloodMap()
+      .then((res) => {
+        if (res && res.zone_data) setZoneData(res.zone_data);
+      })
+      .catch(() => {});
   }, []);
 
   const exportGeoJSON = () => {
@@ -77,9 +82,9 @@ export const MapPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 flex flex-col gap-4 h-[calc(100vh-100px)]">
+    <div className="p-4 flex flex-col gap-4 h-[calc(100vh-140px)] min-h-[600px]">
       {/* Top Controls Bar */}
-      <div className="glass-panel p-3 rounded-2xl flex items-center justify-between border">
+      <div className="glass-panel p-3 rounded-2xl flex items-center justify-between border shrink-0">
         <div className="flex items-center gap-3">
           <Layers className="w-5 h-5 text-cyan-400" />
           <div>
@@ -107,7 +112,7 @@ export const MapPage: React.FC = () => {
       </div>
 
       {/* Full-size Map Container */}
-      <div className="flex-1 w-full h-full">
+      <div className="flex-1 w-full h-full min-h-[480px]">
         <FloodMap zones={zones} zoneData={zoneData} />
       </div>
     </div>

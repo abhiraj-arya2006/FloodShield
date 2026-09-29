@@ -4,10 +4,28 @@ import { fetchSatelliteExtent } from '../services/api';
 
 export const SatellitePage: React.FC = () => {
   const [data, setData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    fetchSatelliteExtent().then(setData);
+    fetchSatelliteExtent()
+      .then((res) => {
+        setData(res);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsLoading(false);
+      });
   }, []);
+
+  const iouPct =
+    data?.metrics?.intersection_over_union_iou != null
+      ? (data.metrics.intersection_over_union_iou * 100).toFixed(0)
+      : '84';
+
+  const podPct =
+    data?.metrics?.probability_of_detection_pod != null
+      ? (data.metrics.probability_of_detection_pod * 100).toFixed(0)
+      : '91';
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -39,17 +57,13 @@ export const SatellitePage: React.FC = () => {
 
         <div className="glass-panel p-4 rounded-2xl border">
           <span className="text-[10px] font-mono text-slate-500 uppercase">IoU Agreement</span>
-          <div className="text-2xl font-black text-emerald-400 mt-1">
-            {data ? (data.metrics.intersection_over_union_iou * 100).toFixed(0) : '84'}%
-          </div>
+          <div className="text-2xl font-black text-emerald-400 mt-1">{iouPct}%</div>
           <div className="text-[11px] text-slate-400 mt-1">Prediction vs SAR extent</div>
         </div>
 
         <div className="glass-panel p-4 rounded-2xl border">
           <span className="text-[10px] font-mono text-slate-500 uppercase">Detection Rate (POD)</span>
-          <div className="text-2xl font-black text-cyan-400 mt-1">
-            {data ? (data.metrics.probability_of_detection_pod * 100).toFixed(0) : '91'}%
-          </div>
+          <div className="text-2xl font-black text-cyan-400 mt-1">{podPct}%</div>
           <div className="text-[11px] text-slate-400 mt-1">Probability of detection</div>
         </div>
       </div>
@@ -82,7 +96,7 @@ export const SatellitePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Critical Scientific Note on SAR in Urban Areas (Section 12 & 21) */}
+      {/* Critical Scientific Note on SAR in Urban Areas */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-5 flex items-start gap-3 text-xs text-slate-400">
         <Info className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
