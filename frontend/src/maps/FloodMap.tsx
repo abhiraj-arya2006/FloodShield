@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Polygon, Tooltip, ZoomControl, useMap } from 'react-leaflet';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { MapContainer, TileLayer, Polygon, ZoomControl, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Layers, Key, RotateCcw, Check, ExternalLink, X } from 'lucide-react';
+import { Key, ExternalLink, X, MapPin, Droplets, ShieldAlert, Sparkles } from 'lucide-react';
 
 import { ZoneStatic, CompactZoneDynamic, MapLayerType } from '../types';
 import { useSimulationStore } from '../store/useSimulationStore';
@@ -33,30 +33,30 @@ function getLayerColor(
   if (activeLayer === 'flood_probability') {
     const p = dynamic.p1;
     if (p >= 0.75) {
-      return { fillColor: '#ef4444', fillOpacity: 0.85, color: '#f87171', weight: 1.5 }; // Critical Red
+      return { fillColor: '#ef4444', fillOpacity: 0.85, color: '#b91c1c', weight: 1.5 }; // Critical Red
     } else if (p >= 0.50) {
-      return { fillColor: '#f97316', fillOpacity: 0.75, color: '#fb923c', weight: 0.8 }; // High Orange
+      return { fillColor: '#f97316', fillOpacity: 0.75, color: '#c2410c', weight: 0.8 }; // High Orange
     } else if (p >= 0.25) {
-      return { fillColor: '#eab308', fillOpacity: 0.65, color: '#facc15', weight: 0.5 }; // Moderate Amber
+      return { fillColor: '#eab308', fillOpacity: 0.65, color: '#a16207', weight: 0.5 }; // Moderate Amber
     } else {
-      return { fillColor: '#10b981', fillOpacity: 0.40, color: '#34d399', weight: 0.3 }; // Low Green
+      return { fillColor: '#10b981', fillOpacity: 0.40, color: '#047857', weight: 0.3 }; // Low Green
     }
   }
 
   if (activeLayer === 'rainfall_intensity') {
     const rf = dynamic.rf_current;
-    if (rf > 50) return { fillColor: '#7c3aed', fillOpacity: 0.85, color: '#a78bfa', weight: 1.0 }; // Deep Purple
-    if (rf > 30) return { fillColor: '#2563eb', fillOpacity: 0.80, color: '#60a5fa', weight: 0.8 }; // Blue
-    if (rf > 10) return { fillColor: '#06b6d4', fillOpacity: 0.65, color: '#22d3ee', weight: 0.5 }; // Cyan
-    if (rf > 1) return { fillColor: '#14b8a6', fillOpacity: 0.45, color: '#2dd4bf', weight: 0.3 };
+    if (rf > 50) return { fillColor: '#7c3aed', fillOpacity: 0.85, color: '#6d28d9', weight: 1.0 }; // Deep Purple
+    if (rf > 30) return { fillColor: '#2563eb', fillOpacity: 0.80, color: '#1d4ed8', weight: 0.8 }; // Blue
+    if (rf > 10) return { fillColor: '#06b6d4', fillOpacity: 0.65, color: '#0e7490', weight: 0.5 }; // Cyan
+    if (rf > 1) return { fillColor: '#14b8a6', fillOpacity: 0.45, color: '#0f766e', weight: 0.3 };
     return { fillColor: '#1e293b', fillOpacity: 0.2, color: '#0f172a', weight: 0.2 };
   }
 
   if (activeLayer === 'priority_score') {
     const score = dynamic.priority_score;
-    if (score >= 0.7) return { fillColor: '#dc2626', fillOpacity: 0.85, color: '#fca5a5', weight: 1.5 };
-    if (score >= 0.45) return { fillColor: '#d97706', fillOpacity: 0.75, color: '#fcd34d', weight: 0.8 };
-    return { fillColor: '#059669', fillOpacity: 0.4, color: '#6ee7b7', weight: 0.3 };
+    if (score >= 0.7) return { fillColor: '#dc2626', fillOpacity: 0.85, color: '#991b1b', weight: 1.5 };
+    if (score >= 0.45) return { fillColor: '#d97706', fillOpacity: 0.75, color: '#b45309', weight: 0.8 };
+    return { fillColor: '#059669', fillOpacity: 0.4, color: '#047857', weight: 0.3 };
   }
 
   if (activeLayer === 'elevation') {
@@ -88,7 +88,7 @@ function getLayerColor(
   if (activeLayer === 'satellite_flood_extent') {
     const isFlooded = dynamic.p1 > 0.65;
     if (isFlooded) {
-      return { fillColor: '#0ea5e9', fillOpacity: 0.85, color: '#38bdf8', weight: 1.5 };
+      return { fillColor: '#0ea5e9', fillOpacity: 0.85, color: '#0284c7', weight: 1.5 };
     }
     return { fillColor: '#0f172a', fillOpacity: 0.15, color: '#1e293b', weight: 0.2 };
   }
@@ -102,7 +102,7 @@ function getLayerColor(
   return { fillColor: '#38bdf8', fillOpacity: 0.4, color: '#0284c7', weight: 0.5 };
 }
 
-// Canvas renderer singleton for high-fps Leaflet polygon rendering
+// Canvas renderer singleton for 60-fps Leaflet polygon rendering
 const canvasRenderer = L.canvas({ padding: 0.5 });
 
 // Auto-resizer component to ensure map invalidates size upon layout shifts
@@ -110,7 +110,6 @@ function MapController({ center }: { center: [number, number] }) {
   const map = useMap();
 
   useEffect(() => {
-    // Initial size invalidation
     const timer = setTimeout(() => {
       map.invalidateSize();
     }, 150);
@@ -129,9 +128,55 @@ function MapController({ center }: { center: [number, number] }) {
   return null;
 }
 
-// Basemap Provider Definitions
+// High-Performance Memoized Polygon component
+interface ZonePolygonProps {
+  zone: ZoneStatic;
+  positions: [number, number][];
+  dynamic?: CompactZoneDynamic;
+  isSelected: boolean;
+  activeLayer: MapLayerType;
+  onSelect: (zoneId: string) => void;
+  onHover: (zone: ZoneStatic, dynamic?: CompactZoneDynamic) => void;
+  onUnhover: () => void;
+}
+
+const ZonePolygon = React.memo<ZonePolygonProps>(
+  ({ zone, positions, dynamic, isSelected, activeLayer, onSelect, onHover, onUnhover }) => {
+    const style = getLayerColor(zone, dynamic, activeLayer);
+
+    return (
+      <Polygon
+        positions={positions}
+        renderer={canvasRenderer}
+        pathOptions={{
+          fillColor: style.fillColor,
+          fillOpacity: isSelected ? 0.95 : style.fillOpacity,
+          color: isSelected ? '#38bdf8' : style.color,
+          weight: isSelected ? 3.0 : style.weight
+        }}
+        eventHandlers={{
+          click: () => onSelect(zone.zone_id),
+          mouseover: () => onHover(zone, dynamic),
+          mouseout: onUnhover
+        }}
+      />
+    );
+  },
+  (prev, next) => {
+    return (
+      prev.isSelected === next.isSelected &&
+      prev.activeLayer === next.activeLayer &&
+      prev.dynamic === next.dynamic &&
+      prev.positions === next.positions
+    );
+  }
+);
+
+ZonePolygon.displayName = 'ZonePolygon';
+
+// Basemap Provider Definitions - OpenStreetMap is primary default
 interface BasemapConfig {
-  id: 'carto_dark' | 'osm' | 'carto_light' | 'mapbox';
+  id: 'osm' | 'carto_dark' | 'carto_light' | 'mapbox';
   name: string;
   url: (token?: string) => string;
   attribution: string;
@@ -141,23 +186,23 @@ interface BasemapConfig {
 }
 
 const BASEMAP_CONFIGS: Record<string, BasemapConfig> = {
-  carto_dark: {
-    id: 'carto_dark',
-    name: 'CARTO Dark Matter (Default)',
-    url: () => 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
-    maxZoom: 19,
-    requiresKey: false,
-    notes: 'Zero API Key needed. Best for dark dashboard UI.'
-  },
   osm: {
     id: 'osm',
-    name: 'OpenStreetMap Standard',
+    name: 'OpenStreetMap (Default)',
     url: () => 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19,
     requiresKey: false,
-    notes: 'Zero API Key needed. 100% open public map tiles.'
+    notes: 'Official OpenStreetMap tiles. 100% free and open-source.'
+  },
+  carto_dark: {
+    id: 'carto_dark',
+    name: 'CARTO Dark Matter',
+    url: () => 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
+    maxZoom: 19,
+    requiresKey: false,
+    notes: 'Zero API Key needed. Dark operations UI.'
   },
   carto_light: {
     id: 'carto_light',
@@ -174,7 +219,7 @@ const BASEMAP_CONFIGS: Record<string, BasemapConfig> = {
     url: (token?: string) =>
       token
         ? `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${token}`
-        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     attribution: '&copy; <a href="https://www.mapbox.com/">Mapbox</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a>',
     maxZoom: 20,
     requiresKey: true,
@@ -196,11 +241,32 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
 
   const [isKeyModalOpen, setIsKeyModalOpen] = useState(false);
   const [tokenInput, setTokenInput] = useState(mapboxToken);
-  const [copiedKeyInfo, setCopiedKeyInfo] = useState(false);
+  const [hoveredZone, setHoveredZone] = useState<{ zone: ZoneStatic; dynamic?: CompactZoneDynamic } | null>(null);
 
   const center: [number, number] = [28.62, 77.15]; // Delhi NCR center
 
-  const currentBasemap = BASEMAP_CONFIGS[mapBasemap] || BASEMAP_CONFIGS.carto_dark;
+  // Pre-convert and cache GeoJSON coordinates into Leaflet positions once
+  const zonePositions = useMemo(() => {
+    const map = new Map<string, [number, number][]>();
+    for (let i = 0; i < zones.length; i++) {
+      const z = zones[i];
+      map.set(
+        z.zone_id,
+        z.geometry.coordinates[0].map(([lon, lat]) => [lat, lon])
+      );
+    }
+    return map;
+  }, [zones]);
+
+  // Callbacks for memoized polygon clicks and hover
+  const handleSelect = useCallback((id: string) => setSelectedZoneId(id), [setSelectedZoneId]);
+  const handleHover = useCallback((zone: ZoneStatic, dynamic?: CompactZoneDynamic) => {
+    setHoveredZone({ zone, dynamic });
+  }, []);
+  const handleUnhover = useCallback(() => setHoveredZone(null), []);
+
+  const activeBasemapKey = mapBasemap in BASEMAP_CONFIGS ? mapBasemap : 'osm';
+  const currentBasemap = BASEMAP_CONFIGS[activeBasemapKey] || BASEMAP_CONFIGS.osm;
   const tileUrl = currentBasemap.url(mapboxToken);
 
   const handleSaveToken = () => {
@@ -244,17 +310,20 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
 
         {/* Basemap & API Key Control */}
         <div className="flex items-center gap-1.5 bg-slate-900/95 p-1.5 rounded-xl border border-slate-700/80 backdrop-blur-md shadow-xl text-xs pointer-events-auto">
-          <select
-            value={mapBasemap}
-            onChange={(e) => setMapBasemap(e.target.value as any)}
-            className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2 py-1 font-medium focus:outline-none focus:border-cyan-500"
-            title="Select Basemap Provider"
-          >
-            <option value="carto_dark">CARTO Dark (No Key)</option>
-            <option value="osm">OpenStreetMap (No Key)</option>
-            <option value="carto_light">CARTO Positron (No Key)</option>
-            <option value="mapbox">Mapbox Dark (Key)</option>
-          </select>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-mono text-cyan-400 font-semibold pl-1 hidden sm:inline">Basemap:</span>
+            <select
+              value={activeBasemapKey}
+              onChange={(e) => setMapBasemap(e.target.value as any)}
+              className="bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2.5 py-1 font-medium focus:outline-none focus:border-cyan-500"
+              title="Select Basemap Provider"
+            >
+              <option value="osm">🗺️ OpenStreetMap (Default)</option>
+              <option value="carto_dark">CARTO Dark Matter</option>
+              <option value="carto_light">CARTO Positron</option>
+              <option value="mapbox">Mapbox Dark (Key)</option>
+            </select>
+          </div>
 
           <button
             onClick={() => setIsKeyModalOpen(true)}
@@ -272,6 +341,59 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
           </button>
         </div>
       </div>
+
+      {/* Floating Fast Inspection Card (Zero Leaflet Tooltip DOM overhead) */}
+      {hoveredZone && (
+        <div className="absolute top-16 right-4 z-[1000] bg-slate-900/95 border border-slate-700 p-3 rounded-xl backdrop-blur-md shadow-2xl text-xs max-w-[280px] pointer-events-none animate-in fade-in duration-100">
+          <div className="flex items-center gap-1.5 text-cyan-400 font-bold text-xs">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate text-white">{hoveredZone.zone.name}</span>
+          </div>
+          <div className="text-[11px] text-slate-400 mt-0.5">{hoveredZone.zone.locality}</div>
+
+          {hoveredZone.dynamic ? (
+            <div className="mt-2 space-y-1.5 pt-2 border-t border-slate-800 text-[11px]">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Flood Likelihood:</span>
+                <span className="font-extrabold text-cyan-400 font-mono">
+                  {(hoveredZone.dynamic.p1 * 100).toFixed(0)}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Risk Assessment:</span>
+                <span
+                  className={`font-bold px-1.5 py-0.2 rounded text-[10px] ${
+                    hoveredZone.dynamic.risk === 'CRITICAL'
+                      ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      : hoveredZone.dynamic.risk === 'HIGH'
+                      ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
+                      : hoveredZone.dynamic.risk === 'MODERATE'
+                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  }`}
+                >
+                  {hoveredZone.dynamic.risk} ({hoveredZone.dynamic.flood_type})
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Instant Rain:</span>
+                <span className="text-white font-mono">{hoveredZone.dynamic.rf_current.toFixed(1)} mm/h</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-400">Priority Score:</span>
+                <span className="text-amber-400 font-mono font-bold">
+                  {hoveredZone.dynamic.priority_score.toFixed(2)}
+                </span>
+              </div>
+              <div className="text-[10px] text-cyan-400/80 pt-1 text-center font-medium">
+                👉 Click zone to open full Hydrology & SHAP panel
+              </div>
+            </div>
+          ) : (
+            <div className="text-[10px] text-slate-500 mt-1">Elev: {hoveredZone.zone.elevation_m}m · Pop: {hoveredZone.zone.population}</div>
+          )}
+        </div>
+      )}
 
       {/* Map Legend */}
       <div className="absolute bottom-4 left-4 z-[1000] bg-slate-900/95 border border-slate-800 p-3 rounded-xl backdrop-blur-md shadow-xl text-xs space-y-2 max-w-[240px]">
@@ -319,7 +441,7 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
         )}
 
         <div className="text-[10px] text-slate-400 pt-1.5 border-t border-slate-800 leading-tight">
-          Click any 500m cell for localized hydrology and SHAP analysis.
+          Hover any zone for instant metrics · Click for detailed SHAP explanation.
         </div>
       </div>
 
@@ -332,7 +454,7 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
           maxZoom={18}
           zoomControl={false}
           preferCanvas={true}
-          className={`w-full h-full ${mapBasemap === 'osm' ? 'osm-dark-tiles' : ''}`}
+          className="w-full h-full"
           style={{ height: '100%', width: '100%' }}
         >
           {/* Zoom controls placed at bottom right to avoid HUD collision */}
@@ -340,7 +462,7 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
 
           {/* Active Tile Provider */}
           <TileLayer
-            key={`${mapBasemap}-${mapboxToken ? 'auth' : 'free'}`}
+            key={`${activeBasemapKey}-${mapboxToken ? 'auth' : 'free'}`}
             attribution={currentBasemap.attribution}
             url={tileUrl}
             maxZoom={currentBasemap.maxZoom}
@@ -348,49 +470,25 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
 
           <MapController center={center} />
 
-          {/* Polygons rendered via Leaflet Canvas */}
+          {/* High-Performance Polygons rendered via Leaflet Canvas */}
           {zones.map((zone) => {
+            const positions = zonePositions.get(zone.zone_id);
+            if (!positions) return null;
             const dynamic = zoneData[zone.zone_id];
-            const style = getLayerColor(zone, dynamic, activeLayer);
             const isSelected = selectedZoneId === zone.zone_id;
 
-            // Convert GeoJSON coordinates [ [lon, lat], ... ] to Leaflet [ [lat, lon], ... ]
-            const positions: [number, number][] = zone.geometry.coordinates[0].map(([lon, lat]) => [lat, lon]);
-
             return (
-              <Polygon
+              <ZonePolygon
                 key={zone.zone_id}
+                zone={zone}
                 positions={positions}
-                renderer={canvasRenderer}
-                pathOptions={{
-                  fillColor: style.fillColor,
-                  fillOpacity: isSelected ? 0.95 : style.fillOpacity,
-                  color: isSelected ? '#38bdf8' : style.color,
-                  weight: isSelected ? 3.0 : style.weight
-                }}
-                eventHandlers={{
-                  click: () => setSelectedZoneId(zone.zone_id)
-                }}
-              >
-                <Tooltip sticky>
-                  <div className="text-xs p-1 font-sans">
-                    <div className="font-bold text-white text-sm">{zone.name}</div>
-                    <div className="text-slate-300 text-[11px] mt-0.5">Locality: {zone.locality}</div>
-                    {dynamic && (
-                      <div className="mt-1.5 space-y-0.5 text-[11px]">
-                        <div className="text-cyan-400 font-bold">
-                          Flood Probability: {(dynamic.p1 * 100).toFixed(0)}%
-                        </div>
-                        <div className="text-slate-300">
-                          Risk: <span className="font-semibold text-white">{dynamic.risk}</span> ({dynamic.flood_type})
-                        </div>
-                        <div className="text-slate-300">Rainfall: {dynamic.rf_current.toFixed(1)} mm/h</div>
-                        <div className="text-amber-400 font-mono">Priority Score: {dynamic.priority_score.toFixed(2)}</div>
-                      </div>
-                    )}
-                  </div>
-                </Tooltip>
-              </Polygon>
+                dynamic={dynamic}
+                isSelected={isSelected}
+                activeLayer={activeLayer}
+                onSelect={handleSelect}
+                onHover={handleHover}
+                onUnhover={handleUnhover}
+              />
             );
           })}
         </MapContainer>
@@ -403,7 +501,7 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <Key className="w-5 h-5 text-cyan-400" />
-                <h3 className="text-base font-bold text-white">Map Basemap & API Key Guide</h3>
+                <h3 className="text-base font-bold text-white">Basemap & Key Management</h3>
               </div>
               <button
                 onClick={() => setIsKeyModalOpen(false)}
@@ -415,9 +513,9 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
 
             <div className="space-y-3 text-xs text-slate-300">
               <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-3 text-cyan-200">
-                <span className="font-bold">✨ Good News for Prototype Demo:</span>
+                <span className="font-bold">🗺️ Active Basemap: OpenStreetMap</span>
                 <p className="mt-1 text-[11px] leading-relaxed">
-                  You <strong>do not need any API key</strong> to display maps! The default <strong>CARTO Dark Matter</strong> and <strong>OpenStreetMap</strong> basemaps work completely free out-of-the-box.
+                  OpenStreetMap provides authentic, free, public mapping with no API key or usage limits. All roads, landmarks, and waterways across Delhi NCR are visible natively.
                 </p>
               </div>
 
@@ -426,7 +524,7 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
                   Optional: Mapbox Public Access Token
                 </label>
                 <p className="text-[11px] text-slate-400 mb-2">
-                  If you wish to use official high-resolution Mapbox Dark tiles, paste your public token below (starts with <code className="text-cyan-300">pk.eyJ...</code>):
+                  If you ever wish to try Mapbox Dark v11 tiles, paste your public token below (starts with <code className="text-cyan-300">pk.eyJ...</code>):
                 </p>
                 <input
                   type="text"
@@ -438,13 +536,13 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
               </div>
 
               <div className="border-t border-slate-800 pt-3 space-y-1.5 text-[11px]">
-                <div className="font-semibold text-slate-200">Available Basemap Modes:</div>
-                <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-white font-medium">1. CARTO Dark Matter</span>
-                  <span className="text-emerald-400 font-mono">No Key (Included)</span>
+                <div className="font-semibold text-slate-200">Available Basemaps:</div>
+                <div className="flex items-center justify-between py-1 border-b border-slate-800/60 font-semibold text-cyan-300">
+                  <span>1. OpenStreetMap (OSM)</span>
+                  <span className="font-mono text-emerald-400">Active (Free)</span>
                 </div>
                 <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-white font-medium">2. OpenStreetMap (OSM)</span>
+                  <span className="text-white font-medium">2. CARTO Dark Matter</span>
                   <span className="text-emerald-400 font-mono">No Key (Included)</span>
                 </div>
                 <div className="flex items-center justify-between py-1 border-b border-slate-800/60">
@@ -471,12 +569,12 @@ export const FloodMap: React.FC<FloodMapProps> = ({ zones, zoneData }) => {
                 onClick={() => {
                   setTokenInput('');
                   setMapboxToken('');
-                  setMapBasemap('carto_dark');
+                  setMapBasemap('osm');
                   setIsKeyModalOpen(false);
                 }}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800"
               >
-                Clear Token (Use Free CARTO)
+                Reset to OpenStreetMap
               </button>
               <button
                 onClick={handleSaveToken}

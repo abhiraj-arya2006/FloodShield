@@ -14,7 +14,12 @@ router = APIRouter(prefix="/flood-map", tags=["Flood Map"])
 model = XGBoostFloodModel()
 
 def _compute_compact_state(hour: Optional[float] = None) -> Dict[str, CompactZoneDynamic]:
-    """Single Source of Truth dynamic zone states."""
+    """Single Source of Truth dynamic zone states with LRU caching."""
+    curr_hour = hour if hour is not None else simulation_engine.clock.get_elapsed_hours()
+    cache_key = f"{simulation_engine.active_scenario_id}_{round(curr_hour, 2)}"
+    if cache_key in simulation_engine._dynamic_cache:
+        return simulation_engine._dynamic_cache[cache_key]
+
     df = simulation_engine.get_feature_table(hour=hour)
     preds = model.predict(df)
     
@@ -62,6 +67,9 @@ def _compute_compact_state(hour: Optional[float] = None) -> Dict[str, CompactZon
             confidence=round(float(conf[i]), 1)
         )
         
+    simulation_engine._dynamic_cache[cache_key] = zone_data
+    if len(simulation_engine._dynamic_cache) > 20:
+        simulation_engine._dynamic_cache.pop(next(iter(simulation_engine._dynamic_cache)))
     return zone_data
 
 @router.get("", response_model=FloodMapResponse)

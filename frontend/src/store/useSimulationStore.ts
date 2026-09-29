@@ -15,7 +15,7 @@ interface SimulationStore {
   timezoneMode: 'IST' | 'UTC';
   wsConnected: boolean;
   lastUpdateTimestamp: string | null;
-  mapBasemap: 'carto_dark' | 'osm' | 'carto_light' | 'mapbox';
+  mapBasemap: 'osm' | 'carto_dark' | 'carto_light' | 'mapbox';
   mapboxToken: string;
 
   // Actions
@@ -31,7 +31,7 @@ interface SimulationStore {
   setTimezoneMode: (mode: 'IST' | 'UTC') => void;
   setWsConnected: (connected: boolean) => void;
   setLastUpdateTimestamp: (ts: string) => void;
-  setMapBasemap: (basemap: 'carto_dark' | 'osm' | 'carto_light' | 'mapbox') => void;
+  setMapBasemap: (basemap: 'osm' | 'carto_dark' | 'carto_light' | 'mapbox') => void;
   setMapboxToken: (token: string) => void;
 }
 
@@ -49,7 +49,7 @@ export const useSimulationStore = create<SimulationStore>((set) => ({
   timezoneMode: 'IST',
   wsConnected: false,
   lastUpdateTimestamp: null,
-  mapBasemap: (localStorage.getItem('floodshield_basemap') as any) || 'carto_dark',
+  mapBasemap: (localStorage.getItem('floodshield_basemap') as any) || 'osm',
   mapboxToken: localStorage.getItem('floodshield_mapbox_token') || '',
 
   setSelectedZoneId: (id) => set({ selectedZoneId: id }),

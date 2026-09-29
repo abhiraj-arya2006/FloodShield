@@ -46,14 +46,16 @@ export const DashboardPage: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  // Poll or refresh dynamic data on clock tick / scenario change
+  // Poll or refresh dynamic data on scenario change and relaxed timer
   useEffect(() => {
+    let isMounted = true;
     const loadDynamic = async () => {
       try {
         const [mapRes, prioRes] = await Promise.all([
           fetchFloodMap(),
           fetchPriorities(10)
         ]);
+        if (!isMounted) return;
         if (mapRes && mapRes.zone_data) {
           setZoneData(mapRes.zone_data);
         }
@@ -67,9 +69,13 @@ export const DashboardPage: React.FC = () => {
     };
 
     loadDynamic();
-    const timer = setInterval(loadDynamic, 3000); // Sync every 3s
-    return () => clearInterval(timer);
-  }, [selectedScenarioId, lastUpdateTimestamp]);
+    // Relaxed 8s polling to keep the browser main thread at a smooth 60 FPS
+    const timer = setInterval(loadDynamic, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [selectedScenarioId]);
 
   // Load selected zone intelligence
   useEffect(() => {
