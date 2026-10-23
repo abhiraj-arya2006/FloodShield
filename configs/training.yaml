@@ -1,0 +1,32 @@
+# Training configuration (placeholder; nothing trained).
+
+device: mps
+fallback_device: cpu
+dtype: float32
+
+seed: 42
+
+# PROPOSED split, NOT FINAL. Time-based split only (no random shuffling across
+# time), to avoid leakage between periods.
+split:
+  strategy: time_based
+  status: proposed
+  train: {start: "1991-01-01", end: "2012-12-31"}
+  validation: {start: "2013-01-01", end: "2016-12-31"}
+  test: {start: "2017-01-01", end: "2020-12-31"}
+
+loss:
+  # Masked loss: days with missing observed streamflow are excluded.
+  type: masked   # TODO: choose base loss (e.g. MSE / NSE-based) and document
+  mask_missing_targets: true
+
+optimizer:
+  name: null           # TODO
+  learning_rate: null  # TODO
+
+batch_size: null  # TODO
+epochs: null      # TODO
+early_stopping:
+  patience: null  # TODO
+
+checkpoint_dir: ./checkpoints

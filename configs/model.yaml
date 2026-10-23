@@ -1,0 +1,28 @@
+# STG-Mamba model configuration (placeholder; model not implemented).
+
+device: mps            # PRIMARY device: Apple GPU via PyTorch MPS
+fallback_device: cpu   # used only if MPS is unavailable (logged as a WARNING)
+dtype: float32         # float32 only on MPS (no float64, no float16/bfloat16)
+
+input:
+  window_days: null    # TODO: input window length (keep short: days to a few weeks)
+  dynamic_features: [] # TODO: weather variables (see configs/data.yaml open_meteo.daily_variables)
+  static_features: []  # TODO: selected CAMELS-IND static catchment attributes
+
+graph:
+  nodes: gauges                  # one node per selected gauge
+  edges: upstream_to_downstream  # derived from HydroRIVERS
+  directed: true
+  self_loops: null               # TODO
+  normalization: null            # TODO
+
+model:
+  hidden_dim: null     # TODO
+  state_dim: null      # TODO (Mamba SSM state size)
+  num_layers: null     # TODO
+  dropout: null        # TODO
+
+output:
+  target: streamflow
+  # PROPOSED, not final.
+  forecast_horizon_days: [1, 2, 3]

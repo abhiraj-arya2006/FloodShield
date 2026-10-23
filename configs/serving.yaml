@@ -1,0 +1,24 @@
+# Live demo serving configuration (placeholder; nothing is running).
+
+refresh_interval_minutes: null   # TODO: how often the scheduler refreshes forecasts
+cache_path: ./outputs/live_cache/latest.json
+
+open_meteo:
+  # Verify endpoints and parameters against the docs before use.
+  forecast_base_url: https://api.open-meteo.com/v1/forecast
+  archive_base_url: https://archive-api.open-meteo.com/v1/archive
+  docs:
+    forecast: https://open-meteo.com/en/docs
+    archive: https://open-meteo.com/en/docs/historical-weather-api
+
+# Open-Meteo data is CC BY 4.0; attribution must be shown in the frontend.
+attribution: "Weather data by Open-Meteo.com"
+
+fallback:
+  # Replay a saved past monsoon event if the network fails during the review.
+  replay_enabled: true
+  replay_event_path: null   # TODO: choose and save an event once the model exists
+
+api:
+  host: 127.0.0.1
+  port: 8000

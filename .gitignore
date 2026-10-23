@@ -1,0 +1,41 @@
+# --- Python / environments ---
+.venv/
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# --- OS / logs ---
+.DS_Store
+logs/
+*.log
+
+# --- Data and generated artifacts (never committed; keep .gitkeep placeholders) ---
+data/raw/*
+!data/raw/*/
+data/raw/*/*
+!data/raw/*/.gitkeep
+
+data/processed/*
+!data/processed/.gitkeep
+
+data/graph/*
+!data/graph/.gitkeep
+
+checkpoints/*
+!checkpoints/.gitkeep
+
+outputs/*
+!outputs/.gitkeep
+
+# --- Frontend (stack not decided yet) ---
+node_modules/
+app/frontend/dist/
+app/frontend/build/
+app/frontend/.next/
+app/frontend/.vite/

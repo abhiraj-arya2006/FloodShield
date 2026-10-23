@@ -1,0 +1,52 @@
+# Data configuration (placeholder; nothing downloaded or verified yet).
+
+paths:
+  data_dir: ./data
+  raw:
+    camels_ind: ./data/raw/camels_ind
+    hydrorivers: ./data/raw/hydrorivers
+    open_meteo: ./data/raw/open_meteo
+  processed: ./data/processed
+  graph: ./data/graph
+
+sources:
+  camels_ind:
+    zenodo_doi: 10.5281/zenodo.14005378
+    paper_doi: 10.5194/essd-17-461-2025
+    subset_archive: CAMELS_IND_Catchments_Streamflow_Sufficient.zip
+    data_description: 00_CAMELS_IND_Data_Description.pdf
+    coverage: "1980-2020"   # per dataset description; verify after download
+    download: manual
+  hydrorivers:
+    url: https://www.hydrosheds.org/products/hydrorivers
+    download: manual
+    # TODO: choose the regional (Asia) vs global product once inspected.
+  open_meteo_archive:
+    docs: https://open-meteo.com/en/docs/historical-weather-api
+    download: scripted   # via scripts/fetch_open_meteo_archive.py (not implemented)
+
+basins:
+  - godavari
+  - mahanadi
+
+# CAMELS-IND gauge IDs are 5 digits; the first 2 digits are the CWC basin code.
+# TODO: confirm the basin-code prefixes for Godavari and Mahanadi from
+#       00_CAMELS_IND_Data_Description.pdf. Do not hard-code until verified.
+basin_code_prefixes:
+  godavari: null   # TODO
+  mahanadi: null   # TODO
+
+frequency: daily
+target: streamflow   # observed daily streamflow at gauge nodes; units per CAMELS-IND description (TODO verify)
+
+gauge_selection:
+  # TODO: minimum data-availability threshold is undecided (e.g. fraction of
+  #       non-missing days within the training period). Decide after exploration.
+  min_data_availability: null
+  period: null   # TODO: the period over which availability is measured
+
+open_meteo:
+  # TODO: list daily variables. Verify exact variable names against the
+  #       Open-Meteo docs; they must exist in BOTH the archive and forecast APIs.
+  daily_variables: []
+  timezone: null   # TODO: decide (e.g. local vs UTC) and keep consistent with streamflow dates
