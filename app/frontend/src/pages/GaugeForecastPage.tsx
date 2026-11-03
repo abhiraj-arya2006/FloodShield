@@ -11,7 +11,7 @@ import {
   GaugeItem,
 } from '../types';
 import { StatusChip } from '../components/StatusChip';
-import { useTranslation } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   BarChart,
   Bar,
@@ -35,7 +35,7 @@ import {
 
 export const GaugeForecastPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   const [date, setDate] = useState<string>('2010-08-15');
   const [forecast, setForecast] = useState<SingleGaugeForecastResponse | null>(null);
@@ -110,7 +110,7 @@ export const GaugeForecastPage: React.FC = () => {
     });
   }, [forecast, t]);
 
-  // Headline status (day 2 peak or highest status among leads)
+  // Headline status
   const maxStatus = useMemo(() => {
     if (!forecast) return 'OK';
     const hasWarn = forecast.lead_days.some((ld) => ld.status === 'WARNING');
@@ -126,15 +126,15 @@ export const GaugeForecastPage: React.FC = () => {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700/80 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0D1628] border border-white/10 text-xs font-mono font-semibold text-slate-300 hover:text-white hover:bg-[#16243E] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>{t('back_to_dashboard')}</span>
         </Link>
 
         {/* Date Selector */}
-        <div className="flex items-center gap-2 bg-[#0c1424] border border-slate-800/80 rounded-xl px-3 py-1.5 text-xs">
-          <Calendar className="w-4 h-4 text-cyan-400" />
+        <div className="flex items-center gap-2 bg-[#0D1628] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono">
+          <Calendar className="w-4 h-4 text-[#00D9F5]" />
           <span className="text-slate-400">{t('date_label')}</span>
           <input
             type="date"
@@ -142,13 +142,13 @@ export const GaugeForecastPage: React.FC = () => {
             max="2012-12-31"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="bg-transparent text-white font-mono font-semibold focus:outline-none cursor-pointer text-xs"
+            className="bg-transparent text-white font-mono font-bold focus:outline-none cursor-pointer text-xs"
           />
         </div>
       </div>
 
       {error && (
-        <div className="p-4 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs flex items-center gap-2">
+        <div className="p-4 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 shrink-0 text-red-400" />
           <span>{error}</span>
         </div>
@@ -157,26 +157,26 @@ export const GaugeForecastPage: React.FC = () => {
       {forecast && (
         <>
           {/* Header Card: Gauge Details & Status */}
-          <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-                  <Waves className="w-7 h-7 text-cyan-400" />
+                <div className="w-12 h-12 rounded-xl bg-[#00D9F5]/10 border border-[#00D9F5]/30 flex items-center justify-center text-[#00D9F5] shadow-[0_0_15px_rgba(0,217,245,0.2)]">
+                  <Waves className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-black text-white">{forecast.name}</h1>
-                    <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700 font-bold">
+                    <h1 className="font-heading font-extrabold text-2xl text-white">{forecast.name}</h1>
+                    <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-[#111C30] text-[#00D9F5] border border-white/10 font-bold">
                       {forecast.gauge_id}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-slate-400 flex items-center gap-2 mt-0.5 font-mono">
                     <span>{forecast.river} River</span>
-                    <span>·</span>
-                    <span className="text-slate-300 font-medium">{forecast.basin} Basin</span>
-                    <span>·</span>
-                    <span className="flex items-center gap-1 font-mono text-[11px] text-slate-500">
-                      <MapPin className="w-3 h-3 text-cyan-400" />
+                    <span>•</span>
+                    <span className="text-slate-200 font-semibold">{forecast.basin} Basin</span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                      <MapPin className="w-3 h-3 text-[#00D9F5]" />
                       {forecast.ghi_lat.toFixed(2)}°N, {forecast.ghi_lon.toFixed(2)}°E
                     </span>
                   </p>
@@ -185,37 +185,37 @@ export const GaugeForecastPage: React.FC = () => {
             </div>
 
             {/* Threshold Indicators & Status Chip */}
-            <div className="flex flex-wrap items-center gap-4 bg-slate-950/60 border border-slate-800 p-3 rounded-xl">
+            <div className="flex flex-wrap items-center gap-4 bg-[#070D1A] border border-white/10 p-3.5 rounded-xl font-mono">
               <div>
-                <p className="text-[10px] text-slate-400 uppercase font-mono">{t('watch_threshold')}</p>
-                <p className="text-sm font-extrabold text-amber-400 font-mono">
+                <p className="text-[10px] text-slate-400 uppercase">{t('watch_threshold')}</p>
+                <p className="text-sm font-bold text-[#FF9D28]">
                   {forecast.q90_m3s.toLocaleString()} m³/s
                 </p>
               </div>
-              <div className="w-px h-8 bg-slate-800" />
+              <div className="w-px h-8 bg-white/10" />
               <div>
-                <p className="text-[10px] text-slate-400 uppercase font-mono">{t('flood_threshold')}</p>
-                <p className="text-sm font-extrabold text-red-400 font-mono">
+                <p className="text-[10px] text-slate-400 uppercase">{t('flood_threshold')}</p>
+                <p className="text-sm font-bold text-[#FF454F]">
                   {forecast.q95_m3s.toLocaleString()} m³/s
                 </p>
               </div>
-              <div className="w-px h-8 bg-slate-800" />
+              <div className="w-px h-8 bg-white/10" />
               <div className="flex flex-col items-end">
-                <span className="text-[10px] text-slate-400 uppercase font-mono mb-0.5">Overall Status</span>
+                <span className="text-[10px] text-slate-400 uppercase mb-0.5">Overall Status</span>
                 <StatusChip status={maxStatus} size="md" />
               </div>
             </div>
           </div>
 
           {/* Hydrograph Chart Section */}
-          <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <div>
-                <h3 className="font-extrabold text-base text-white flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-cyan-400" />
+                <h3 className="font-heading font-extrabold text-base text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-[#00D9F5]" />
                   <span>{t('hydrograph_title')}</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-slate-400 mt-0.5 font-mono">
                   {t('hydrograph_subtitle')}
                 </p>
               </div>
@@ -235,54 +235,55 @@ export const GaugeForecastPage: React.FC = () => {
             <div className="w-full h-95 pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#16243E" />
                   <XAxis
                     dataKey="name"
-                    stroke="#94a3b8"
+                    stroke="#91A2B8"
                     fontSize={12}
                     tickLine={false}
                   />
                   <YAxis
-                    stroke="#94a3b8"
+                    stroke="#91A2B8"
                     fontSize={12}
                     tickFormatter={(val) => `${val.toLocaleString()} m³/s`}
                     tickLine={false}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0c1424',
-                      borderColor: '#334155',
-                      borderRadius: '0.75rem',
-                      color: '#f8fafc',
+                      backgroundColor: '#0D1628',
+                      borderColor: 'rgba(255,255,255,0.15)',
+                      borderRadius: '0.875rem',
+                      color: '#F4F7FB',
+                      fontFamily: 'monospace',
                     }}
                     formatter={(value: any, name: any) => [
                       `${Number(value).toLocaleString()} m³/s`,
                       name === 'predicted' ? 'Predicted Flow' : 'Observed Flow',
                     ]}
                   />
-                  <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                  <Legend wrapperStyle={{ paddingTop: '10px', fontFamily: 'monospace' }} />
 
                   {/* Threshold Reference Lines */}
                   <ReferenceLine
                     y={forecast.q95_m3s}
-                    stroke="#ef4444"
+                    stroke="#FF454F"
                     strokeDasharray="4 4"
                     strokeWidth={2}
                     label={{
                       value: `Flood Warning (q95): ${forecast.q95_m3s.toLocaleString()} m³/s`,
-                      fill: '#ef4444',
+                      fill: '#FF454F',
                       position: 'top',
                       fontSize: 11,
                     }}
                   />
                   <ReferenceLine
                     y={forecast.q90_m3s}
-                    stroke="#f59e0b"
+                    stroke="#FF9D28"
                     strokeDasharray="4 4"
                     strokeWidth={1.5}
                     label={{
                       value: `Flood Watch (q90): ${forecast.q90_m3s.toLocaleString()} m³/s`,
-                      fill: '#f59e0b',
+                      fill: '#FF9D28',
                       position: 'top',
                       fontSize: 11,
                     }}
@@ -292,7 +293,7 @@ export const GaugeForecastPage: React.FC = () => {
                   <Bar
                     dataKey="predicted"
                     name="STG-Mamba Predicted Flow"
-                    fill="#22d3ee"
+                    fill="#00D9F5"
                     radius={[6, 6, 0, 0]}
                   />
 
@@ -301,7 +302,7 @@ export const GaugeForecastPage: React.FC = () => {
                     <Bar
                       dataKey="observed"
                       name="Observed Streamflow"
-                      fill="#10b981"
+                      fill="#13D6B0"
                       radius={[6, 6, 0, 0]}
                     />
                   )}
@@ -309,30 +310,30 @@ export const GaugeForecastPage: React.FC = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="text-[11px] text-slate-500 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+            <div className="text-[11px] font-mono text-slate-500 pt-2 border-t border-white/5 flex items-center justify-between">
               <span>* Lead Day 1 is treated as a Nowcast. Headline flood forecasts are Lead Days 2 to 4.</span>
-              <span className="font-mono text-cyan-400">Replay Source: 2009–2012 Validation Set</span>
+              <span className="text-[#00D9F5]">Replay Period: 2009–2012 Validation Set</span>
             </div>
           </div>
 
           {/* River Network Connectivity: Upstream & Downstream Neighbors */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Upstream Gauges */}
-            <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-3">
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-                <GitBranch className="w-4 h-4 text-cyan-400 rotate-180" />
-                <h4 className="font-bold text-sm text-white">{t('upstream_gauges')}</h4>
+            <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-3">
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <GitBranch className="w-4 h-4 text-[#00D9F5] rotate-180" />
+                <h4 className="font-heading font-bold text-sm text-white">{t('upstream_gauges')}</h4>
               </div>
 
               {upstreamReaches.length === 0 ? (
-                <p className="text-xs text-slate-500 italic py-2">{t('no_upstream')}</p>
+                <p className="text-xs text-slate-500 italic py-2 font-mono">{t('no_upstream')}</p>
               ) : (
                 <div className="space-y-2">
                   {upstreamReaches.map((reach) => (
                     <Link
                       key={reach.from_gauge_id}
                       to={`/gauge/${reach.from_gauge_id}`}
-                      className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 flex items-center justify-between transition-colors text-xs"
+                      className="p-3 rounded-xl bg-[#070D1A] border border-white/10 hover:border-[#00D9F5]/50 flex items-center justify-between transition-colors text-xs font-mono"
                     >
                       <div>
                         <span className="font-bold text-white">
@@ -340,7 +341,7 @@ export const GaugeForecastPage: React.FC = () => {
                         </span>
                         <p className="text-[11px] text-slate-400">ID: {reach.from_gauge_id}</p>
                       </div>
-                      <span className="font-mono text-cyan-400 text-xs">
+                      <span className="text-[#00D9F5] font-bold">
                         {reach.river_distance_km} km upstream
                       </span>
                     </Link>
@@ -350,21 +351,21 @@ export const GaugeForecastPage: React.FC = () => {
             </div>
 
             {/* Downstream Gauges */}
-            <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-5 shadow-xl space-y-3">
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-                <GitBranch className="w-4 h-4 text-cyan-400" />
-                <h4 className="font-bold text-sm text-white">{t('downstream_gauges')}</h4>
+            <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-3">
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <GitBranch className="w-4 h-4 text-[#00D9F5]" />
+                <h4 className="font-heading font-bold text-sm text-white">{t('downstream_gauges')}</h4>
               </div>
 
               {downstreamReaches.length === 0 ? (
-                <p className="text-xs text-slate-500 italic py-2">{t('no_downstream')}</p>
+                <p className="text-xs text-slate-500 italic py-2 font-mono">{t('no_downstream')}</p>
               ) : (
                 <div className="space-y-2">
                   {downstreamReaches.map((reach) => (
                     <Link
                       key={reach.to_gauge_id}
                       to={`/gauge/${reach.to_gauge_id}`}
-                      className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 flex items-center justify-between transition-colors text-xs"
+                      className="p-3 rounded-xl bg-[#070D1A] border border-white/10 hover:border-[#00D9F5]/50 flex items-center justify-between transition-colors text-xs font-mono"
                     >
                       <div>
                         <span className="font-bold text-white">
@@ -372,7 +373,7 @@ export const GaugeForecastPage: React.FC = () => {
                         </span>
                         <p className="text-[11px] text-slate-400">ID: {reach.to_gauge_id}</p>
                       </div>
-                      <span className="font-mono text-cyan-400 text-xs">
+                      <span className="text-[#00D9F5] font-bold">
                         {reach.river_distance_km} km downstream
                       </span>
                     </Link>
@@ -386,4 +387,3 @@ export const GaugeForecastPage: React.FC = () => {
     </div>
   );
 };
-

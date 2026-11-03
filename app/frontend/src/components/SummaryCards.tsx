@@ -1,7 +1,7 @@
 import React from 'react';
+import { Gauge, ShieldAlert, AlertTriangle, TrendingUp, Waves } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 import { GaugeForecastRow } from '../types';
-import { Activity, ShieldAlert, AlertTriangle, TrendingUp } from 'lucide-react';
-import { useTranslation } from '../i18n/LanguageContext';
 
 interface SummaryCardsProps {
   totalGauges: number;
@@ -16,97 +16,107 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({
   watchCount,
   peakGauge,
 }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* 1. Gauges Monitored */}
-      <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-4 shadow-lg shadow-black/20 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+      <div className="bg-[#0D1628] border border-white/10 hover:border-[#00D9F5]/40 rounded-2xl p-5 shadow-xl transition-all duration-200 group">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono font-medium text-[#91A2B8] uppercase tracking-wider">
             {t('kpi_gauges_monitored')}
-          </p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-3xl font-extrabold text-white font-mono">
-              {totalGauges}
-            </span>
-            <span className="text-xs text-cyan-400 font-medium">
-              (27 Godavari · 19 Mahanadi)
-            </span>
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-[#00D9F5]/10 border border-[#00D9F5]/30 flex items-center justify-center text-[#00D9F5] shadow-[0_0_12px_rgba(0,217,245,0.2)] group-hover:scale-105 transition-transform">
+            <Gauge className="w-4 h-4" />
           </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-          <Activity className="w-6 h-6 text-cyan-400" />
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="font-heading font-black text-3xl text-white tracking-tight">
+            {totalGauges}
+          </span>
+          <span className="text-xs font-mono text-[#13D6B0] font-semibold">
+            All Telemetry Active
+          </span>
+        </div>
+        <div className="mt-2 text-[11px] font-mono text-slate-400">
+          27 Godavari • 19 Mahanadi reaches
         </div>
       </div>
 
-      {/* 2. WARNING Alerts */}
-      <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-4 shadow-lg shadow-black/20 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-red-400">
+      {/* 2. Gauges at WARNING */}
+      <div className={`bg-[#0D1628] rounded-2xl p-5 shadow-xl transition-all duration-200 group ${
+        warningCount > 0
+          ? 'border border-[#FF454F]/40 shadow-[0_0_20px_rgba(255,69,79,0.15)] bg-gradient-to-br from-[#0D1628] to-[#FF454F]/5'
+          : 'border border-white/10 hover:border-[#FF454F]/30'
+      }`}>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono font-medium text-[#91A2B8] uppercase tracking-wider">
             {t('kpi_warning_alerts')}
-          </p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-3xl font-extrabold text-red-400 font-mono">
-              {warningCount}
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              gauges at high flow
-            </span>
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-[#FF454F]/10 border border-[#FF454F]/30 flex items-center justify-center text-[#FF454F] shadow-[0_0_12px_rgba(255,69,79,0.2)] group-hover:scale-105 transition-transform">
+            <ShieldAlert className="w-4 h-4" />
           </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
-          <ShieldAlert className="w-6 h-6 text-red-400" />
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="font-heading font-black text-3xl text-[#FF454F] tracking-tight">
+            {warningCount}
+          </span>
+          <span className="text-xs font-mono font-bold text-[#FF454F] bg-[#FF454F]/10 px-2 py-0.5 rounded-full border border-[#FF454F]/30">
+            ≥ q95 Level
+          </span>
+        </div>
+        <div className="mt-2 text-[11px] font-mono text-slate-400">
+          High flood exceedance probability
         </div>
       </div>
 
-      {/* 3. WATCH Alerts */}
-      <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-4 shadow-lg shadow-black/20 flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+      {/* 3. Gauges at WATCH */}
+      <div className={`bg-[#0D1628] rounded-2xl p-5 shadow-xl transition-all duration-200 group ${
+        watchCount > 0
+          ? 'border border-[#FF9D28]/40 shadow-[0_0_20px_rgba(255,157,40,0.15)] bg-gradient-to-br from-[#0D1628] to-[#FF9D28]/5'
+          : 'border border-white/10 hover:border-[#FF9D28]/30'
+      }`}>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono font-medium text-[#91A2B8] uppercase tracking-wider">
             {t('kpi_watch_alerts')}
-          </p>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className="text-3xl font-extrabold text-amber-400 font-mono">
-              {watchCount}
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              gauges elevated
-            </span>
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-[#FF9D28]/10 border border-[#FF9D28]/30 flex items-center justify-center text-[#FF9D28] shadow-[0_0_12px_rgba(255,157,40,0.2)] group-hover:scale-105 transition-transform">
+            <AlertTriangle className="w-4 h-4" />
           </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-          <AlertTriangle className="w-6 h-6 text-amber-400" />
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="font-heading font-black text-3xl text-[#FF9D28] tracking-tight">
+            {watchCount}
+          </span>
+          <span className="text-xs font-mono font-bold text-[#FF9D28] bg-[#FF9D28]/10 px-2 py-0.5 rounded-full border border-[#FF9D28]/30">
+            q90 to q95
+          </span>
+        </div>
+        <div className="mt-2 text-[11px] font-mono text-slate-400">
+          Elevated river stage vigilance
         </div>
       </div>
 
-      {/* 4. Next Expected Peak */}
-      <div className="bg-[#0c1424] border border-slate-800/80 rounded-2xl p-4 shadow-lg shadow-black/20 flex items-center justify-between">
-        <div className="min-w-0 pr-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
+      {/* 4. Peak Expected Flow */}
+      <div className="bg-[#0D1628] border border-white/10 hover:border-[#00D9F5]/40 rounded-2xl p-5 shadow-xl transition-all duration-200 group">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-mono font-medium text-[#91A2B8] uppercase tracking-wider">
             {t('kpi_next_peak')}
-          </p>
-          {peakGauge ? (
-            <div className="mt-1">
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-extrabold text-white font-mono truncate">
-                  {peakGauge.predicted_m3s.toLocaleString()}
-                </span>
-                <span className="text-xs font-mono text-slate-400">m³/s</span>
-              </div>
-              <p className="text-xs text-slate-300 truncate font-medium">
-                {t('kpi_peak_at')} <span className="text-cyan-300 font-semibold">{peakGauge.name}</span> ({peakGauge.basin})
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-400 mt-2 font-mono">no data</p>
-          )}
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shadow-[0_0_12px_rgba(168,85,247,0.2)] group-hover:scale-105 transition-transform">
+            <TrendingUp className="w-4 h-4" />
+          </div>
         </div>
-        <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
-          <TrendingUp className="w-6 h-6 text-cyan-400" />
+        <div className="mt-3 flex items-baseline gap-2">
+          <span className="font-heading font-black text-3xl text-white tracking-tight">
+            {peakGauge ? Math.round(peakGauge.predicted_m3s).toLocaleString() : '—'}
+          </span>
+          <span className="text-xs font-mono text-slate-400">m³/s</span>
+        </div>
+        <div className="mt-2 text-[11px] font-mono text-cyan-300 truncate">
+          {peakGauge ? `${peakGauge.name} (${peakGauge.river})` : 'No forecast selected'}
         </div>
       </div>
     </div>
   );
 };
-

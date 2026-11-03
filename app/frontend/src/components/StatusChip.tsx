@@ -1,7 +1,7 @@
 import React from 'react';
 import { AlertStatus } from '../types';
 import { ShieldAlert, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useTranslation } from '../i18n/LanguageContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface StatusChipProps {
   status: AlertStatus;
@@ -9,22 +9,22 @@ interface StatusChipProps {
 }
 
 export const StatusChip: React.FC<StatusChipProps> = ({ status, size = 'md' }) => {
-  const { t } = useTranslation();
+  const { t } = useLanguage();
 
   const sizeClasses = {
-    sm: 'px-2 py-0.5 text-[11px] gap-1',
+    sm: 'px-2 py-0.5 text-[10px] gap-1',
     md: 'px-2.5 py-1 text-xs gap-1.5',
-    lg: 'px-3.5 py-1.5 text-sm gap-2'
+    lg: 'px-3.5 py-1.5 text-sm gap-2',
   }[size];
 
   if (status === 'WARNING') {
     return (
       <span
-        className={`inline-flex items-center font-bold rounded-full bg-red-950/80 text-red-400 border border-red-500/50 shadow-sm shadow-red-950 ${sizeClasses}`}
+        className={`inline-flex items-center font-mono font-bold rounded-full bg-[#FF454F]/20 text-[#FF454F] border border-[#FF454F]/40 shadow-[0_0_10px_rgba(255,69,79,0.25)] ${sizeClasses}`}
         role="status"
         aria-label="Warning status"
       >
-        <ShieldAlert className="w-3.5 h-3.5 text-red-400 shrink-0" aria-hidden="true" />
+        <ShieldAlert className="w-3.5 h-3.5 text-[#FF454F] shrink-0" aria-hidden="true" />
         <span>{t('status_warning')}</span>
       </span>
     );
@@ -33,11 +33,11 @@ export const StatusChip: React.FC<StatusChipProps> = ({ status, size = 'md' }) =
   if (status === 'WATCH') {
     return (
       <span
-        className={`inline-flex items-center font-bold rounded-full bg-amber-950/80 text-amber-400 border border-amber-500/50 shadow-sm shadow-amber-950 ${sizeClasses}`}
+        className={`inline-flex items-center font-mono font-bold rounded-full bg-[#FF9D28]/20 text-[#FF9D28] border border-[#FF9D28]/40 shadow-[0_0_10px_rgba(255,157,40,0.25)] ${sizeClasses}`}
         role="status"
         aria-label="Watch status"
       >
-        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
+        <AlertTriangle className="w-3.5 h-3.5 text-[#FF9D28] shrink-0" aria-hidden="true" />
         <span>{t('status_watch')}</span>
       </span>
     );
@@ -45,13 +45,12 @@ export const StatusChip: React.FC<StatusChipProps> = ({ status, size = 'md' }) =
 
   return (
     <span
-      className={`inline-flex items-center font-semibold rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/50 shadow-sm shadow-emerald-950 ${sizeClasses}`}
+      className={`inline-flex items-center font-mono font-semibold rounded-full bg-[#13D6B0]/20 text-[#13D6B0] border border-[#13D6B0]/40 shadow-[0_0_10px_rgba(19,214,176,0.2)] ${sizeClasses}`}
       role="status"
       aria-label="Normal status"
     >
-      <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" aria-hidden="true" />
+      <CheckCircle className="w-3.5 h-3.5 text-[#13D6B0] shrink-0" aria-hidden="true" />
       <span>{t('status_ok')}</span>
     </span>
   );
 };
-
