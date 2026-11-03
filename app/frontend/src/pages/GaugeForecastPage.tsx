@@ -232,7 +232,7 @@ export const GaugeForecastPage: React.FC = () => {
             </div>
 
             {/* Recharts Bar Chart Container */}
-            <div className="w-full h-[380px] pt-2">
+            <div className="w-full h-95 pt-2">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
