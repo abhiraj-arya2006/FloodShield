@@ -1,0 +1,222 @@
+[
+  {
+    "from_gauge_id": "01001",
+    "to_gauge_id": "01002",
+    "river_distance_km": 14.2
+  },
+  {
+    "from_gauge_id": "01002",
+    "to_gauge_id": "01003",
+    "river_distance_km": 78.5
+  },
+  {
+    "from_gauge_id": "01004",
+    "to_gauge_id": "01005",
+    "river_distance_km": 32.1
+  },
+  {
+    "from_gauge_id": "01005",
+    "to_gauge_id": "01006",
+    "river_distance_km": 49.3
+  },
+  {
+    "from_gauge_id": "01003",
+    "to_gauge_id": "01006",
+    "river_distance_km": 98.4
+  },
+  {
+    "from_gauge_id": "01007",
+    "to_gauge_id": "01008",
+    "river_distance_km": 41.7
+  },
+  {
+    "from_gauge_id": "01008",
+    "to_gauge_id": "01011",
+    "river_distance_km": 125.0
+  },
+  {
+    "from_gauge_id": "01006",
+    "to_gauge_id": "01011",
+    "river_distance_km": 210.0
+  },
+  {
+    "from_gauge_id": "01009",
+    "to_gauge_id": "01010",
+    "river_distance_km": 68.4
+  },
+  {
+    "from_gauge_id": "01010",
+    "to_gauge_id": "01012",
+    "river_distance_km": 122.1
+  },
+  {
+    "from_gauge_id": "01011",
+    "to_gauge_id": "01012",
+    "river_distance_km": 94.6
+  },
+  {
+    "from_gauge_id": "01013",
+    "to_gauge_id": "01014",
+    "river_distance_km": 115.3
+  },
+  {
+    "from_gauge_id": "01015",
+    "to_gauge_id": "01016",
+    "river_distance_km": 44.8
+  },
+  {
+    "from_gauge_id": "01016",
+    "to_gauge_id": "01017",
+    "river_distance_km": 118.0
+  },
+  {
+    "from_gauge_id": "01014",
+    "to_gauge_id": "01018",
+    "river_distance_km": 130.5
+  },
+  {
+    "from_gauge_id": "01017",
+    "to_gauge_id": "01018",
+    "river_distance_km": 155.0
+  },
+  {
+    "from_gauge_id": "01012",
+    "to_gauge_id": "01019",
+    "river_distance_km": 146.0
+  },
+  {
+    "from_gauge_id": "01019",
+    "to_gauge_id": "01020",
+    "river_distance_km": 18.2
+  },
+  {
+    "from_gauge_id": "01020",
+    "to_gauge_id": "01023",
+    "river_distance_km": 215.0
+  },
+  {
+    "from_gauge_id": "01018",
+    "to_gauge_id": "01023",
+    "river_distance_km": 182.0
+  },
+  {
+    "from_gauge_id": "01021",
+    "to_gauge_id": "01022",
+    "river_distance_km": 185.0
+  },
+  {
+    "from_gauge_id": "01022",
+    "to_gauge_id": "01023",
+    "river_distance_km": 140.0
+  },
+  {
+    "from_gauge_id": "01024",
+    "to_gauge_id": "01025",
+    "river_distance_km": 98.0
+  },
+  {
+    "from_gauge_id": "01025",
+    "to_gauge_id": "01026",
+    "river_distance_km": 54.0
+  },
+  {
+    "from_gauge_id": "01023",
+    "to_gauge_id": "01026",
+    "river_distance_km": 92.5
+  },
+  {
+    "from_gauge_id": "01026",
+    "to_gauge_id": "01027",
+    "river_distance_km": 38.0
+  },
+  {
+    "from_gauge_id": "02001",
+    "to_gauge_id": "02002",
+    "river_distance_km": 52.0
+  },
+  {
+    "from_gauge_id": "02002",
+    "to_gauge_id": "02003",
+    "river_distance_km": 44.5
+  },
+  {
+    "from_gauge_id": "02004",
+    "to_gauge_id": "02005",
+    "river_distance_km": 68.0
+  },
+  {
+    "from_gauge_id": "02005",
+    "to_gauge_id": "02009",
+    "river_distance_km": 95.0
+  },
+  {
+    "from_gauge_id": "02003",
+    "to_gauge_id": "02009",
+    "river_distance_km": 105.0
+  },
+  {
+    "from_gauge_id": "02006",
+    "to_gauge_id": "02007",
+    "river_distance_km": 36.4
+  },
+  {
+    "from_gauge_id": "02007",
+    "to_gauge_id": "02009",
+    "river_distance_km": 42.0
+  },
+  {
+    "from_gauge_id": "02008",
+    "to_gauge_id": "02009",
+    "river_distance_km": 62.0
+  },
+  {
+    "from_gauge_id": "02009",
+    "to_gauge_id": "02012",
+    "river_distance_km": 138.0
+  },
+  {
+    "from_gauge_id": "02010",
+    "to_gauge_id": "02011",
+    "river_distance_km": 32.5
+  },
+  {
+    "from_gauge_id": "02011",
+    "to_gauge_id": "02012",
+    "river_distance_km": 48.0
+  },
+  {
+    "from_gauge_id": "02012",
+    "to_gauge_id": "02013",
+    "river_distance_km": 15.0
+  },
+  {
+    "from_gauge_id": "02014",
+    "to_gauge_id": "02015",
+    "river_distance_km": 35.0
+  },
+  {
+    "from_gauge_id": "02015",
+    "to_gauge_id": "02016",
+    "river_distance_km": 58.0
+  },
+  {
+    "from_gauge_id": "02013",
+    "to_gauge_id": "02016",
+    "river_distance_km": 76.0
+  },
+  {
+    "from_gauge_id": "02016",
+    "to_gauge_id": "02017",
+    "river_distance_km": 68.0
+  },
+  {
+    "from_gauge_id": "02017",
+    "to_gauge_id": "02018",
+    "river_distance_km": 110.0
+  },
+  {
+    "from_gauge_id": "02018",
+    "to_gauge_id": "02019",
+    "river_distance_km": 14.5
+  }
+]

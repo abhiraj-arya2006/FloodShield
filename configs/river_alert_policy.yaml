@@ -1,0 +1,17 @@
+alert_margin: 0.0
+data_mode: replay
+headline_lead_days:
+- 2
+- 3
+- 4
+lead_days:
+- 1
+- 2
+- 3
+- 4
+nowcast_lead_day: 1
+validation_period:
+  end: '2012-12-31'
+  start: '2009-01-01'
+warning_quantile: 0.95
+watch_quantile: 0.9

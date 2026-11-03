@@ -15,7 +15,9 @@ dist/
 logs/
 *.log
 
-# --- Data and generated artifacts (never committed; keep .gitkeep placeholders) ---
+# --- Data and generated artifacts
+*.parquet
+app/backend/data/*.parquet (never committed; keep .gitkeep placeholders) ---
 data/raw/*
 !data/raw/*/
 data/raw/*/*
