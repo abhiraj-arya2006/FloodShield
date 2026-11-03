@@ -386,3 +386,4 @@ export const GaugeForecastPage: React.FC = () => {
     </div>
   );
 };
+

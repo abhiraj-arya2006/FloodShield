@@ -54,3 +54,4 @@ export const StatusChip: React.FC<StatusChipProps> = ({ status, size = 'md' }) =
     </span>
   );
 };
+

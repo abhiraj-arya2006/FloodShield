@@ -1,0 +1,10 @@
+search-path = [
+    ".",
+    "src",
+    "backend",
+    "ml",
+    "scripts"
+]
+
+[errors]
+missing-import = "ignore"

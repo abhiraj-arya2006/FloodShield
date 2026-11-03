@@ -170,3 +170,4 @@ def test_live_source_501_not_implemented():
         assert "Live inference pipeline is planned for Phase 3" in res.json()["detail"]
     finally:
         app.dependency_overrides.clear()
+

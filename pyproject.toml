@@ -8,17 +8,19 @@ version = "0.0.1"
 description = "FloodShield Phase 2: STG-Mamba flood forecasting for the Godavari and Mahanadi basins (scaffold)."
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
-# Runtime dependencies are pinned in requirements.txt; install that first.
 dependencies = []
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = [".", "src"]
 
 [tool.pyright]
-extraPaths = [".", "src"]
+extraPaths = [".", "src", "backend", "ml", "scripts"]
 
 [tool.pyrefly]
-search-paths = [".", "src"]
+search-path = [".", "src", "backend", "ml", "scripts"]
+
+[tool.pyrefly.errors]
+missing-import = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

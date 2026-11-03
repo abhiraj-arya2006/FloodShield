@@ -6,10 +6,24 @@
   "python.testing.pytestArgs": ["tests"],
   "python.analysis.extraPaths": [
     "${workspaceFolder}",
-    "${workspaceFolder}/src"
+    "${workspaceFolder}/src",
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/ml",
+    "${workspaceFolder}/scripts"
   ],
   "python.autoComplete.extraPaths": [
     "${workspaceFolder}",
-    "${workspaceFolder}/src"
-  ]
+    "${workspaceFolder}/src",
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/ml",
+    "${workspaceFolder}/scripts"
+  ],
+  "pyrefly.searchPath": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/src",
+    "${workspaceFolder}/backend",
+    "${workspaceFolder}/ml",
+    "${workspaceFolder}/scripts"
+  ],
+  "pyrefly.errors.missingImport": "ignore"
 }
