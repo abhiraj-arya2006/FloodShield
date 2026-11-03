@@ -13,7 +13,17 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('lang') === 'hi') return 'hi';
+    const saved = localStorage.getItem('floodshield_lang') as Language;
+    return saved === 'hi' ? 'hi' : 'en';
+  });
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
+    localStorage.setItem('floodshield_lang', lang);
+  };
 
   const t = (key: keyof typeof en): string => {
     const dict = language === 'hi' ? hi : en;
@@ -21,7 +31,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       <div className={language === 'hi' ? 'font-devanagari' : 'font-sans'}>
         {children}
       </div>
@@ -36,3 +46,4 @@ export const useTranslation = () => {
   }
   return context;
 };
+
