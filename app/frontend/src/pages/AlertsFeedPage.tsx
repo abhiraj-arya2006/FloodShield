@@ -233,3 +233,4 @@ export const AlertsFeedPage: React.FC = () => {
     </div>
   );
 };
+

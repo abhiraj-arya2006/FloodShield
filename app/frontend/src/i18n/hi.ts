@@ -83,3 +83,4 @@ export const hi: typeof en = {
   validation_window: "सत्यापन पुनरावृत्ति अवधि",
   data_sources_title: "डेटा स्रोत और संदर्भ"
 };
+
