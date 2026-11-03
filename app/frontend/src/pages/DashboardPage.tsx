@@ -183,7 +183,7 @@ export const DashboardPage: React.FC = () => {
       {/* Main Operations Grid: Map (8 cols) + Active Alerts (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* River Map View */}
-        <div className="lg:col-span-8 flex flex-col min-h-[520px]">
+        <div className="lg:col-span-8 flex flex-col min-h-130">
           <RiverMap
             gauges={filteredGauges}
             edges={edges}
@@ -193,7 +193,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Active Alerts Side List */}
-        <div className="lg:col-span-4 bg-[#0c1424] border border-slate-800/80 rounded-2xl p-4 shadow-xl flex flex-col h-[520px]">
+        <div className="lg:col-span-4 bg-[#0c1424] border border-slate-800/80 rounded-2xl p-4 shadow-xl flex flex-col h-130">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-cyan-400" />

@@ -222,7 +222,7 @@ export const AlertsFeedPage: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-200 leading-relaxed break-words select-all">
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-200 leading-relaxed wrap-break-words select-all">
                   {alert.drafted_message}
                 </div>
               </div>

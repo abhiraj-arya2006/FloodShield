@@ -113,30 +113,35 @@ class XGBoostFloodModel(FloodModel):
         X_single = row[FEATURE_COLS]
         
         # Compute real SHAP values using TreeExplainer
+        if self.explainer is None:
+            self.explainer = shap.TreeExplainer(self.model)
+        assert callable(self.explainer)
         shap_values = self.explainer(X_single)
         # shap_values.values has shape (1, num_features)
         vals = shap_values.values[0]
         
-        contributions = []
+        contributions: List[Dict[str, Any]] = []
         for i, col in enumerate(FEATURE_COLS):
             val = float(vals[i])
             f_val = float(X_single[col].iloc[0])
             disp_name, unit = FEATURE_DISPLAY_NAMES.get(col, (col, ""))
             contributions.append({
-                "feature_name": col,
-                "display_name": disp_name,
+                "feature_name": str(col),
+                "display_name": str(disp_name),
                 "feature_value": round(f_val, 2),
                 "contribution": round(val, 4),
-                "unit": unit
+                "unit": str(unit)
             })
             
         # Sort by absolute SHAP contribution
-        contributions.sort(key=lambda x: abs(x["contribution"]), reverse=True)
-        top_factors = [x["display_name"] for x in contributions[:4] if abs(x["contribution"]) > 0.001]
+        contributions.sort(key=lambda x: abs(float(x["contribution"])), reverse=True)
+        top_factors: List[str] = [str(x["display_name"]) for x in contributions[:4] if abs(float(x["contribution"])) > 0.001]
         if not top_factors:
-            top_factors = [contributions[0]["display_name"], contributions[1]["display_name"]]
+            top_factors = [str(contributions[0]["display_name"]), str(contributions[1]["display_name"])]
             
-        summary = f"Risk primarily driven by {top_factors[0].lower()} and {top_factors[1].lower()} in this locality."
+        factor_0 = str(top_factors[0]).lower()
+        factor_1 = str(top_factors[1]).lower()
+        summary = f"Risk primarily driven by {factor_0} and {factor_1} in this locality."
         
         return {
             "top_factors": top_factors,

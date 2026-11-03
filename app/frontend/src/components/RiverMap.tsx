@@ -63,7 +63,7 @@ export const RiverMap: React.FC<RiverMapProps> = ({
   };
 
   return (
-    <div className="relative w-full h-[520px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-[#070d1a] flex flex-col">
+    <div className="relative w-full h-130 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl bg-[#070d1a] flex flex-col">
       {/* Top Map HUD Overlay */}
       <div className="absolute top-3 left-3 z-[1000] bg-[#0c1424]/95 border border-slate-800 p-2.5 rounded-xl backdrop-blur-md shadow-xl text-xs space-y-1">
         <div className="flex items-center gap-2 font-bold text-slate-200">
