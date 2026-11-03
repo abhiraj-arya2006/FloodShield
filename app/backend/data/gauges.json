@@ -1,0 +1,462 @@
+[
+  {
+    "gauge_id": "01001",
+    "name": "Gangapur",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 19.99,
+    "ghi_lon": 73.7,
+    "q90_m3s": 280.0,
+    "q95_m3s": 380.0
+  },
+  {
+    "gauge_id": "01002",
+    "name": "Nashik",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 19.98,
+    "ghi_lon": 73.81,
+    "q90_m3s": 390.0,
+    "q95_m3s": 520.0
+  },
+  {
+    "gauge_id": "01003",
+    "name": "Kopargaon",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 19.89,
+    "ghi_lon": 74.48,
+    "q90_m3s": 580.0,
+    "q95_m3s": 780.0
+  },
+  {
+    "gauge_id": "01004",
+    "name": "Shrirampur",
+    "basin": "Godavari",
+    "river": "Pravara",
+    "ghi_lat": 19.62,
+    "ghi_lon": 74.65,
+    "q90_m3s": 320.0,
+    "q95_m3s": 440.0
+  },
+  {
+    "gauge_id": "01005",
+    "name": "Nevasa",
+    "basin": "Godavari",
+    "river": "Pravara",
+    "ghi_lat": 19.55,
+    "ghi_lon": 74.92,
+    "q90_m3s": 510.0,
+    "q95_m3s": 680.0
+  },
+  {
+    "gauge_id": "01006",
+    "name": "Paithan",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 19.48,
+    "ghi_lon": 75.38,
+    "q90_m3s": 1100.0,
+    "q95_m3s": 1450.0
+  },
+  {
+    "gauge_id": "01007",
+    "name": "Jalna D/S",
+    "basin": "Godavari",
+    "river": "Dudhna",
+    "ghi_lat": 19.83,
+    "ghi_lon": 75.9,
+    "q90_m3s": 260.0,
+    "q95_m3s": 360.0
+  },
+  {
+    "gauge_id": "01008",
+    "name": "Partur",
+    "basin": "Godavari",
+    "river": "Dudhna",
+    "ghi_lat": 19.6,
+    "ghi_lon": 76.22,
+    "q90_m3s": 420.0,
+    "q95_m3s": 570.0
+  },
+  {
+    "gauge_id": "01009",
+    "name": "Bidar U/S",
+    "basin": "Godavari",
+    "river": "Manjira",
+    "ghi_lat": 17.91,
+    "ghi_lon": 77.53,
+    "q90_m3s": 380.0,
+    "q95_m3s": 510.0
+  },
+  {
+    "gauge_id": "01010",
+    "name": "Sangareddy",
+    "basin": "Godavari",
+    "river": "Manjira",
+    "ghi_lat": 17.62,
+    "ghi_lon": 78.08,
+    "q90_m3s": 680.0,
+    "q95_m3s": 920.0
+  },
+  {
+    "gauge_id": "01011",
+    "name": "Nanded",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 19.15,
+    "ghi_lon": 77.31,
+    "q90_m3s": 1900.0,
+    "q95_m3s": 2550.0
+  },
+  {
+    "gauge_id": "01012",
+    "name": "Nizamabad",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 18.68,
+    "ghi_lon": 78.1,
+    "q90_m3s": 2600.0,
+    "q95_m3s": 3450.0
+  },
+  {
+    "gauge_id": "01013",
+    "name": "Wardha U/S",
+    "basin": "Godavari",
+    "river": "Wardha",
+    "ghi_lat": 20.75,
+    "ghi_lon": 78.6,
+    "q90_m3s": 490.0,
+    "q95_m3s": 660.0
+  },
+  {
+    "gauge_id": "01014",
+    "name": "Ballarpur",
+    "basin": "Godavari",
+    "river": "Wardha",
+    "ghi_lat": 19.85,
+    "ghi_lon": 79.35,
+    "q90_m3s": 1120.0,
+    "q95_m3s": 1500.0
+  },
+  {
+    "gauge_id": "01015",
+    "name": "Nagpur D/S",
+    "basin": "Godavari",
+    "river": "Kanhan",
+    "ghi_lat": 21.23,
+    "ghi_lon": 79.25,
+    "q90_m3s": 560.0,
+    "q95_m3s": 750.0
+  },
+  {
+    "gauge_id": "01016",
+    "name": "Bhandara",
+    "basin": "Godavari",
+    "river": "Wainganga",
+    "ghi_lat": 21.17,
+    "ghi_lon": 79.65,
+    "q90_m3s": 1350.0,
+    "q95_m3s": 1800.0
+  },
+  {
+    "gauge_id": "01017",
+    "name": "Gadchiroli",
+    "basin": "Godavari",
+    "river": "Wainganga",
+    "ghi_lat": 20.18,
+    "ghi_lon": 79.99,
+    "q90_m3s": 2250.0,
+    "q95_m3s": 3000.0
+  },
+  {
+    "gauge_id": "01018",
+    "name": "Kaleshwaram",
+    "basin": "Godavari",
+    "river": "Pranhita",
+    "ghi_lat": 18.82,
+    "ghi_lon": 79.91,
+    "q90_m3s": 3900.0,
+    "q95_m3s": 5200.0
+  },
+  {
+    "gauge_id": "01019",
+    "name": "Mancherial",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 18.87,
+    "ghi_lon": 79.45,
+    "q90_m3s": 4500.0,
+    "q95_m3s": 5900.0
+  },
+  {
+    "gauge_id": "01020",
+    "name": "Ramagundam",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 18.76,
+    "ghi_lon": 79.51,
+    "q90_m3s": 4900.0,
+    "q95_m3s": 6450.0
+  },
+  {
+    "gauge_id": "01021",
+    "name": "Jagdalpur",
+    "basin": "Godavari",
+    "river": "Indravati",
+    "ghi_lat": 19.07,
+    "ghi_lon": 82.02,
+    "q90_m3s": 850.0,
+    "q95_m3s": 1150.0
+  },
+  {
+    "gauge_id": "01022",
+    "name": "Bhopalpatnam",
+    "basin": "Godavari",
+    "river": "Indravati",
+    "ghi_lat": 18.86,
+    "ghi_lon": 80.38,
+    "q90_m3s": 2100.0,
+    "q95_m3s": 2800.0
+  },
+  {
+    "gauge_id": "01023",
+    "name": "Bhadrachalam",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 17.67,
+    "ghi_lon": 80.89,
+    "q90_m3s": 8200.0,
+    "q95_m3s": 10800.0
+  },
+  {
+    "gauge_id": "01024",
+    "name": "Sukma",
+    "basin": "Godavari",
+    "river": "Sabari",
+    "ghi_lat": 18.4,
+    "ghi_lon": 81.67,
+    "q90_m3s": 670.0,
+    "q95_m3s": 890.0
+  },
+  {
+    "gauge_id": "01025",
+    "name": "Kunavaram",
+    "basin": "Godavari",
+    "river": "Sabari",
+    "ghi_lat": 17.58,
+    "ghi_lon": 81.25,
+    "q90_m3s": 1680.0,
+    "q95_m3s": 2240.0
+  },
+  {
+    "gauge_id": "01026",
+    "name": "Polavaram",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 17.25,
+    "ghi_lon": 81.64,
+    "q90_m3s": 10200.0,
+    "q95_m3s": 13500.0
+  },
+  {
+    "gauge_id": "01027",
+    "name": "Dowleswaram",
+    "basin": "Godavari",
+    "river": "Godavari",
+    "ghi_lat": 16.94,
+    "ghi_lon": 81.77,
+    "q90_m3s": 11800.0,
+    "q95_m3s": 15600.0
+  },
+  {
+    "gauge_id": "02001",
+    "name": "Kanker",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.27,
+    "ghi_lon": 81.49,
+    "q90_m3s": 210.0,
+    "q95_m3s": 290.0
+  },
+  {
+    "gauge_id": "02002",
+    "name": "Dhamtari",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.71,
+    "ghi_lon": 81.55,
+    "q90_m3s": 430.0,
+    "q95_m3s": 580.0
+  },
+  {
+    "gauge_id": "02003",
+    "name": "Rajim",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.96,
+    "ghi_lon": 81.88,
+    "q90_m3s": 720.0,
+    "q95_m3s": 960.0
+  },
+  {
+    "gauge_id": "02004",
+    "name": "Durg",
+    "basin": "Mahanadi",
+    "river": "Seonath",
+    "ghi_lat": 21.19,
+    "ghi_lon": 81.28,
+    "q90_m3s": 530.0,
+    "q95_m3s": 710.0
+  },
+  {
+    "gauge_id": "02005",
+    "name": "Simga",
+    "basin": "Mahanadi",
+    "river": "Seonath",
+    "ghi_lat": 21.63,
+    "ghi_lon": 81.7,
+    "q90_m3s": 1150.0,
+    "q95_m3s": 1520.0
+  },
+  {
+    "gauge_id": "02006",
+    "name": "Korba",
+    "basin": "Mahanadi",
+    "river": "Hasdeo",
+    "ghi_lat": 22.35,
+    "ghi_lon": 82.68,
+    "q90_m3s": 590.0,
+    "q95_m3s": 790.0
+  },
+  {
+    "gauge_id": "02007",
+    "name": "Champa",
+    "basin": "Mahanadi",
+    "river": "Hasdeo",
+    "ghi_lat": 22.04,
+    "ghi_lon": 82.65,
+    "q90_m3s": 980.0,
+    "q95_m3s": 1310.0
+  },
+  {
+    "gauge_id": "02008",
+    "name": "Kharsia",
+    "basin": "Mahanadi",
+    "river": "Mand",
+    "ghi_lat": 21.97,
+    "ghi_lon": 83.12,
+    "q90_m3s": 460.0,
+    "q95_m3s": 620.0
+  },
+  {
+    "gauge_id": "02009",
+    "name": "Sheorinarayan",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 21.72,
+    "ghi_lon": 82.59,
+    "q90_m3s": 2200.0,
+    "q95_m3s": 2900.0
+  },
+  {
+    "gauge_id": "02010",
+    "name": "Sundargarh",
+    "basin": "Mahanadi",
+    "river": "Ib",
+    "ghi_lat": 22.12,
+    "ghi_lon": 84.03,
+    "q90_m3s": 410.0,
+    "q95_m3s": 550.0
+  },
+  {
+    "gauge_id": "02011",
+    "name": "Jharsuguda",
+    "basin": "Mahanadi",
+    "river": "Ib",
+    "ghi_lat": 21.85,
+    "ghi_lon": 84.0,
+    "q90_m3s": 800.0,
+    "q95_m3s": 1080.0
+  },
+  {
+    "gauge_id": "02012",
+    "name": "Hirakud Reservoir",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 21.53,
+    "ghi_lon": 83.87,
+    "q90_m3s": 4600.0,
+    "q95_m3s": 6100.0
+  },
+  {
+    "gauge_id": "02013",
+    "name": "Sambalpur",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 21.47,
+    "ghi_lon": 83.97,
+    "q90_m3s": 4950.0,
+    "q95_m3s": 6600.0
+  },
+  {
+    "gauge_id": "02014",
+    "name": "Bolangir",
+    "basin": "Mahanadi",
+    "river": "Tel",
+    "ghi_lat": 20.71,
+    "ghi_lon": 83.48,
+    "q90_m3s": 560.0,
+    "q95_m3s": 740.0
+  },
+  {
+    "gauge_id": "02015",
+    "name": "Kantamal",
+    "basin": "Mahanadi",
+    "river": "Tel",
+    "ghi_lat": 20.65,
+    "ghi_lon": 83.74,
+    "q90_m3s": 1300.0,
+    "q95_m3s": 1720.0
+  },
+  {
+    "gauge_id": "02016",
+    "name": "Khairmal",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.82,
+    "ghi_lon": 84.18,
+    "q90_m3s": 6900.0,
+    "q95_m3s": 9200.0
+  },
+  {
+    "gauge_id": "02017",
+    "name": "Tikarpara",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.6,
+    "ghi_lon": 84.78,
+    "q90_m3s": 8400.0,
+    "q95_m3s": 11100.0
+  },
+  {
+    "gauge_id": "02018",
+    "name": "Naraj",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.47,
+    "ghi_lon": 85.77,
+    "q90_m3s": 10500.0,
+    "q95_m3s": 13900.0
+  },
+  {
+    "gauge_id": "02019",
+    "name": "Cuttack",
+    "basin": "Mahanadi",
+    "river": "Mahanadi",
+    "ghi_lat": 20.46,
+    "ghi_lon": 85.88,
+    "q90_m3s": 11400.0,
+    "q95_m3s": 15100.0
+  }
+]

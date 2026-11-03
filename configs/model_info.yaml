@@ -1,0 +1,29 @@
+correction_stage: XGBoost residual error correction (Phase 3 planned; out of scope
+  for current serving)
+data_sources:
+- citation: India-WRIS / Zenodo (doi:10.5281/zenodo.14005378)
+  name: CAMELS-IND
+  role: Observed daily streamflow target, gauge coordinates, static catchment attributes
+- citation: HydroSHEDS / WWF
+  name: HydroRIVERS
+  role: Upstream-to-downstream topological river network adjacency and river reach
+    distances
+- citation: Open-Meteo.com (CC BY 4.0)
+  name: Open-Meteo ERA5 Historical Weather Archive
+  role: Historical daily meteorological forcings (precipitation, temperature, surface
+    pressure, wind)
+- citation: Open-Meteo.com (CC BY 4.0)
+  name: Open-Meteo Global Numerical Weather Forecast
+  role: Live weather input pipeline (to be activated in Phase 3)
+description: Spatio-Temporal Graph Neural Network combined with Mamba (Selective State
+  Space) sequence blocks for river streamflow forecasting.
+disclaimer: This is an academic research prototype. Flood thresholds represent local
+  high-flow percentiles (q95) and do not represent official flood levels declared
+  by the Central Water Commission (CWC). Simulated alert dispatch only.
+forecast_horizons: Lead Day 1 (Nowcast), Lead Days 2, 3, 4 (Headline Forecasts)
+forecaster: STG-Mamba (PyTorch implementation with directed river network adjacency)
+model_name: STG-Mamba
+time_step: Daily
+training_years: 1980 - 2008 (CAMELS-IND daily records)
+validation_years: 2009 - 2012 (Held-out validation replay window)
+version: Phase 2 (Scaffold Evaluation)
