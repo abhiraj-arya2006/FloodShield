@@ -1,0 +1,14 @@
+{
+ "device": "mps",
+ "parameters": 40868,
+ "batch_size": 32,
+ "batches_per_epoch": 206,
+ "seconds_per_batch_median": 0.7304432500022813,
+ "seconds_per_train_epoch_estimate": 150.47130950046994,
+ "validation_pass_seconds": 5.176284499990288,
+ "untrained_val_loss": 0.39790908207373366,
+ "current_allocated_mb": 0.670208,
+ "driver_allocated_mb": 3556.786176,
+ "cpu_seconds_per_batch_median": 9.709327999997186,
+ "cpu_seconds_per_train_epoch_estimate": 2000.1215679994202
+}

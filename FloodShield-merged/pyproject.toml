@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "floodshield"
+version = "0.0.1"
+description = "FloodShield Phase 2: STG-Mamba flood forecasting for the Godavari and Mahanadi basins (scaffold)."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = []
+
+# Runtime dependencies are pinned in requirements.txt; install that first.
+[tool.setuptools.packages.find]
+where = [".", "src"]
+
+[tool.pyright]
+extraPaths = [".", "src", "backend", "ml", "scripts"]
+
+[tool.pyrefly]
+search-path = [".", "src", "backend", "ml", "scripts"]
+
+[tool.pyrefly.errors]
+missing-import = "ignore"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["notebooks"]

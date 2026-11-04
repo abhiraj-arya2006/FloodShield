@@ -1,0 +1,46 @@
+# Live demo serving configuration (placeholder; nothing is running).
+# Current plan: docs/live_demo_plan.md and docs/live_data_options.md.
+
+refresh_interval_minutes: null   # TODO: how often the scheduler refreshes forecasts
+cache_path: ./outputs/live_cache/latest.json
+
+live_sources:
+  # Recent OBSERVED rain and temperature (the model's past window).
+  imd_realtime:
+    status: tested             # fetched successfully on 2026-10-27 (docs/live_data_options.md)
+    client: imdlib             # imdlib 0.4.0, pinned in requirements.txt
+    variables: [rain, tmax, tmin]
+    observed_lag_days: {rain: 1, tmin: 1, tmax: 2}   # as observed on 2026-10-27, not guaranteed
+    grid_deg: {rain: 0.25, tmax: 0.5, tmin: 0.5}     # archive temperature (training) is 1.0 deg
+    terms: TODO               # IMD real-time data-use terms not found; confirm before public use
+  # FORECAST rain for the coming days (the model's future-rain covariate).
+  geos_fp:
+    status: pending_unverified   # NASA GEOS-FP; NOT tested yet: endpoint, variables, latency unknown
+    variables: [precipitation]   # TODO: exact variable name and units once tested
+  # Both sources are averaged over each CAMELS-IND catchment polygon, the
+  # same way the training forcings were (area-weighted daily means).
+
+warning:
+  # A daily model: an alert means predicted daily flow above the gauge's own
+  # high-flow threshold (configs/flow_thresholds.csv), not an official CWC
+  # level. It cannot resolve the hour. Parameters: configs/training.yaml warning.
+  thresholds_file: ./configs/flow_thresholds.csv
+
+fallback:
+  # Replay a saved past monsoon event if the network fails during the review.
+  replay_enabled: true
+  replay_event_path: null   # TODO: choose and save an event once the model exists
+
+api:
+  host: 127.0.0.1
+  port: 8000
+
+# Considered, NOT used (kept for reference only; not a live requirement).
+considered_not_used:
+  open_meteo:
+    forecast_base_url: https://api.open-meteo.com/v1/forecast
+    archive_base_url: https://archive-api.open-meteo.com/v1/archive
+    docs:
+      forecast: https://open-meteo.com/en/docs
+      archive: https://open-meteo.com/en/docs/historical-weather-api
+    # Its CC BY 4.0 attribution would only apply if Open-Meteo data were shown.
