@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenWhatIf, onOpenDocs }) => {
   }, []);
 
   const navLinks = [
-    { label: t('nav_dashboard'), path: '/' },
+    { label: t('nav_dashboard'), path: '/dashboard' },
     { label: t('nav_alerts'), path: '/alerts' },
     { label: t('nav_model_info'), path: '/model-info' },
   ];
