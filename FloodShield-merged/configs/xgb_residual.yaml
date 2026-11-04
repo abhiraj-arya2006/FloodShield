@@ -1,0 +1,37 @@
+# XGBoost residual correction of the saved STG-Mamba ensemble (Phase 3).
+# Settings were fixed before the first fit and are not tuned on the results.
+# Used only by scripts/train_xgb_residual.py; nothing here changes STG-Mamba.
+
+ensemble:
+  run_name: ens_perlead_hf5
+  decoder: per_lead
+  members: [stg_mamba_perlead_hf5, stg_mamba_perlead_hf5_s1, stg_mamba_perlead_hf5_s2]
+
+# A forecast date t belongs to a year only if all its target days t+1..t+H lie in
+# that year. Forecasts straddling the fit/holdout boundary are used by neither.
+split:
+  fit: {start: "2009-01-01", end: "2011-12-31"}
+  holdout: {start: "2012-01-01", end: "2012-12-31"}
+
+rain:
+  past_window_days: [3, 7]    # totals over t-n+1..t
+
+xgboost:
+  objective: "reg:squarederror"
+  max_depth: 3
+  learning_rate: 0.05
+  n_estimators: 400
+  early_stopping_rounds: 50
+  reg_lambda: 1.0             # XGBoost default, left on
+  tree_method: hist
+  random_state: 42
+
+scoring:
+  peak_top_n: 10              # each gauge's largest observed days in the holdout
+
+outputs:
+  model: checkpoints/xgb_residual_ens_perlead_hf5.json
+  table: outputs/xgb_residual_table.parquet
+  gauges: outputs/xgb_residual_2012_gauges.csv
+  summary_json: metrics/xgb_residual_2012_summary.json
+  summary_md: metrics/xgb_residual_2012_summary.md

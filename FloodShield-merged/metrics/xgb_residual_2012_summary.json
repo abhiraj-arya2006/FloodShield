@@ -1,0 +1,221 @@
+{
+ "ensemble": "ens_perlead_hf5",
+ "members": [
+  "stg_mamba_perlead_hf5",
+  "stg_mamba_perlead_hf5_s1",
+  "stg_mamba_perlead_hf5_s2"
+ ],
+ "xgboost_version": "3.2.0",
+ "params": {
+  "objective": "reg:squarederror",
+  "max_depth": 3,
+  "learning_rate": 0.05,
+  "n_estimators": 400,
+  "early_stopping_rounds": 50,
+  "reg_lambda": 1.0,
+  "tree_method": "hist",
+  "random_state": 42
+ },
+ "features": [
+  "predicted_z",
+  "lead_day",
+  "month",
+  "rain_past_3d_mm",
+  "rain_past_7d_mm",
+  "rain_t1_mm",
+  "rain_t2_mm",
+  "rain_t3_mm",
+  "rain_t4_mm",
+  "log10_area_km2",
+  "elev_mean_m",
+  "slope_mean_pct",
+  "num_dams",
+  "total_storage_m3",
+  "crops_frac_2005",
+  "urban_frac_2005",
+  "trees_frac",
+  "water_frac",
+  "soil_depth_m",
+  "sand_frac_top",
+  "clay_frac_top",
+  "p_mean_train",
+  "high_prec_freq_train",
+  "aridity_p_pet_train",
+  "tavg_mean_train"
+ ],
+ "rows": {
+  "total": 268272,
+  "fit_observed": 186510,
+  "holdout_observed": 64441,
+  "boundary_excluded": 552,
+  "fit_forecast_dates": [
+   "2008-12-31",
+   "2011-12-27"
+  ],
+  "holdout_forecast_dates": [
+   "2011-12-31",
+   "2012-12-27"
+  ]
+ },
+ "best_round": 393,
+ "max_rounds": 400,
+ "z_rmse": {
+  "fit_before": 0.5254295225672395,
+  "fit_after": 0.39684605756948516,
+  "holdout_before": 0.5061247698811495,
+  "holdout_after": 0.4153705446662303,
+  "holdout_zero_days_before": 0.6255992539393584,
+  "holdout_zero_days_after": 0.4136093926964191,
+  "holdout_flowing_days_before": 0.4654933585187369,
+  "holdout_flowing_days_after": 0.4158833458046211
+ },
+ "before": {
+  "2": {
+   "median_nse": 0.5381523556019386,
+   "flood_days": 905,
+   "hits": 677,
+   "false_alarms": 456,
+   "hit_share": 0.7480662983425415,
+   "false_alarm_share": 0.4024713150926743,
+   "median_peak_ratio": 0.7968541331982757
+  },
+  "3": {
+   "median_nse": 0.544874632426872,
+   "flood_days": 905,
+   "hits": 683,
+   "false_alarms": 467,
+   "hit_share": 0.7546961325966851,
+   "false_alarm_share": 0.40608695652173915,
+   "median_peak_ratio": 0.7887779805547772
+  },
+  "4": {
+   "median_nse": 0.5642095784033135,
+   "flood_days": 905,
+   "hits": 668,
+   "false_alarms": 450,
+   "hit_share": 0.7381215469613259,
+   "false_alarm_share": 0.40250447227191416,
+   "median_peak_ratio": 0.7659423448789788
+  }
+ },
+ "after": {
+  "2": {
+   "median_nse": 0.6176764189877669,
+   "flood_days": 905,
+   "hits": 576,
+   "false_alarms": 229,
+   "hit_share": 0.63646408839779,
+   "false_alarm_share": 0.284472049689441,
+   "median_peak_ratio": 0.6453064452390684
+  },
+  "3": {
+   "median_nse": 0.6201604745966203,
+   "flood_days": 905,
+   "hits": 585,
+   "false_alarms": 238,
+   "hit_share": 0.6464088397790055,
+   "false_alarm_share": 0.2891859052247874,
+   "median_peak_ratio": 0.6566374962421513
+  },
+  "4": {
+   "median_nse": 0.6256594118248192,
+   "flood_days": 905,
+   "hits": 572,
+   "false_alarms": 213,
+   "hit_share": 0.6320441988950276,
+   "false_alarm_share": 0.2713375796178344,
+   "median_peak_ratio": 0.640620774793996
+  }
+ },
+ "nse_change": {
+  "1": {
+   "improved": 26,
+   "worsened": 20,
+   "unchanged": 0,
+   "undefined": 0,
+   "median_change": 0.021817480440276815
+  },
+  "2": {
+   "improved": 25,
+   "worsened": 21,
+   "unchanged": 0,
+   "undefined": 0,
+   "median_change": 0.013666320708967616
+  },
+  "3": {
+   "improved": 25,
+   "worsened": 21,
+   "unchanged": 0,
+   "undefined": 0,
+   "median_change": 0.012167133295594268
+  },
+  "4": {
+   "improved": 25,
+   "worsened": 21,
+   "unchanged": 0,
+   "undefined": 0,
+   "median_change": 0.011225676824858366
+  }
+ },
+ "sensitivity_all_rounds_no_stopping": {
+  "2": {
+   "median_nse": 0.6177313134508664,
+   "flood_days": 905,
+   "hits": 576,
+   "false_alarms": 229,
+   "hit_share": 0.63646408839779,
+   "false_alarm_share": 0.284472049689441,
+   "median_peak_ratio": 0.6484429771019384
+  },
+  "3": {
+   "median_nse": 0.622467673608663,
+   "flood_days": 905,
+   "hits": 586,
+   "false_alarms": 240,
+   "hit_share": 0.6475138121546962,
+   "false_alarm_share": 0.29055690072639223,
+   "median_peak_ratio": 0.6569510983641043
+  },
+  "4": {
+   "median_nse": 0.6272575513798457,
+   "flood_days": 905,
+   "hits": 569,
+   "false_alarms": 219,
+   "hit_share": 0.6287292817679558,
+   "false_alarm_share": 0.2779187817258883,
+   "median_peak_ratio": 0.6385119554833296
+  }
+ },
+ "gain_importance": {
+  "clay_frac_top": 259.71014404296875,
+  "water_frac": 179.49154663085938,
+  "crops_frac_2005": 144.6426239013672,
+  "log10_area_km2": 131.67144775390625,
+  "p_mean_train": 110.10459899902344,
+  "num_dams": 108.73577880859375,
+  "tavg_mean_train": 94.0163345336914,
+  "sand_frac_top": 91.80517578125,
+  "urban_frac_2005": 70.22270965576172,
+  "high_prec_freq_train": 67.1610107421875,
+  "slope_mean_pct": 64.36219787597656,
+  "predicted_z": 58.23533248901367,
+  "soil_depth_m": 50.860809326171875,
+  "total_storage_m3": 49.59174346923828,
+  "trees_frac": 47.46637725830078,
+  "elev_mean_m": 46.140106201171875,
+  "month": 37.75617218017578,
+  "rain_past_7d_mm": 31.65323829650879,
+  "aridity_p_pet_train": 31.32358741760254,
+  "rain_past_3d_mm": 22.993066787719727,
+  "rain_t1_mm": 16.199453353881836,
+  "rain_t2_mm": 13.571452140808105,
+  "rain_t3_mm": 10.371935844421387,
+  "rain_t4_mm": 6.87249755859375
+ },
+ "notes": [
+  "2012 chose the stopping round and also gives these scores.",
+  "Ensemble selection also used 2009-2012, so 2012 is not untouched.",
+  "Future rain is observed IMD rain, so scores are optimistic against a real forecast.",
+  "Flood counts are pooled over gauges; the test years were not read."
+ ]
+}

@@ -1,3 +1,0 @@
-{"version":"0.0.1","configurations":[
-{"name":"backend","runtimeExecutable":"python","runtimeArgs":["-m","uvicorn","app.backend.main:app","--host","127.0.0.1","--port","8000"],"port":8000},
-{"name":"frontend","runtimeExecutable":"npm","runtimeArgs":["--prefix","app/frontend","run","dev"],"port":5173}]}

@@ -1,0 +1,110 @@
+# Training configuration (nothing trained yet). Window sizes and features
+# live in configs/model.yaml. ALL VALUES ARE PROPOSED unless stated.
+
+device: mps
+fallback_device: cpu
+dtype: float32
+
+seed: 42
+
+# PROPOSED split, NOT FINAL. Time-based split only (no random shuffling across
+# time), to avoid leakage between periods.
+#
+# This split was chosen AFTER inspecting streamflow coverage in CAMELS-IND v2.2,
+# not fixed in advance:
+#   - Observed streamflow for Godavari and Mahanadi mostly ends in Feb-Mar 2019
+#     (almost no data in 2020), so the test period ends 2018-12-31.
+#   - Many Godavari gauges share a data gap around 2014-2015. Validation is
+#     placed before it (2009-2012) and the gap falls inside the test period.
+# Because the periods were picked with knowledge of data availability, report
+# this alongside any test-period results.
+#
+# A sample belongs to a split only if ALL its target days (t+1..t+H) lie inside
+# the split period; its past window may reach into earlier years.
+split:
+  strategy: time_based
+  status: proposed
+  train: {start: "1991-01-01", end: "2008-12-31"}
+  validation: {start: "2009-01-01", end: "2012-12-31"}
+  test: {start: "2013-01-01", end: "2018-12-31"}
+
+# Transforms. Statistics are fitted on the TRAIN period only.
+normalisation:
+  target: log1p_then_standardise_per_gauge   # inverse saved with the processed data
+  dynamic: standardise_per_feature_pooled     # over all gauges and train days
+  dynamic_log1p_features: [prcp]              # log1p before standardising (skewed, >= 0)
+  static: standardise_across_gauges
+
+# Future rain covariate for days t+1..t+H.
+future_rain:
+  # observed: train with the REAL observed IMD rain for t+1..t+H as a stand-in
+  #           for a forecast (optimistic; live uses forecast rain).
+  # noisy:    hook only. Adds forecast-like errors; parameters stay null until a
+  #           forecast-error test (e.g. GEOS-FP vs IMD) provides numbers.
+  mode: observed
+  noisy:
+    error_model: null     # TODO
+    params: null          # TODO
+
+# High-flow thresholds (configs/flow_thresholds.csv), from TRAIN-period
+# observed streamflow only (missing days ignored).
+flow_thresholds:
+  quantiles: [0.90, 0.95, 0.99]
+  event_quantile: 0.95      # events counted with this threshold
+  min_test_events: 3        # flag gauges with fewer test-period events
+
+# Flood warning concept (PROPOSED; nothing here is hard-coded in code).
+# This is a DAILY model: warning time is measured to the START of the forecast
+# day, and the model cannot resolve the hour of a peak. "Flood" here means
+# predicted daily flow above the gauge's own threshold, NOT an official CWC
+# warning/danger level.
+warning:
+  issue_time_ist: "09:00"
+  assumed_data_lag_days: 1    # newest complete observed day at issue time is D-1
+  min_warning_hours: 6
+  threshold_quantile: 0.95
+  alert_margin: null          # TODO: tune on the VALIDATION period only
+  # headline_lead_days is derived in code as (assumed_data_lag_days + 1) ..
+  # horizon_days, i.e. 2..4 with the current settings.
+
+loss:
+  # Masked loss on standardised log1p flow: missing days contribute nothing.
+  type: huber            # huber | mse
+  huber_delta: 1.0
+  mask_missing_targets: true
+  high_flow:
+    enabled: false       # any choice about this is made on VALIDATION only
+    weight: null         # TODO if enabled: loss weight on days above threshold_quantile
+
+optimizer:
+  name: adamw
+  learning_rate: 0.001
+  weight_decay: 0.0001
+
+batch_size: 32
+eval_batch_size: 64
+epochs: 60               # maximum
+gradient_clip_norm: 1.0
+early_stopping:
+  patience: 8            # epochs without validation-loss improvement
+
+# S2 sanity check: must nearly reach zero on one small batch (dropout off).
+sanity_overfit:
+  batch_size: 8
+  steps: 600
+  learning_rate: 0.003
+  pass_loss: 0.02
+
+# S3 benchmark.
+benchmark:
+  batches: 20
+  warmup_batches: 3
+  cpu_batches: 3
+
+# Reference baselines (never model inputs).
+baselines:
+  climatology_window_days: 15   # centred calendar window over the training years
+
+checkpoint_dir: ./checkpoints
+metrics_dir: ./metrics           # small tracked JSON summaries
+processed_dir: ./data/processed/training   # arrays, normalisers, sample indices
