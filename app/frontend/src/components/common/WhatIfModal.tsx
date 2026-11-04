@@ -297,3 +297,4 @@ export const WhatIfModal: React.FC<WhatIfModalProps> = ({ isOpen, onClose }) => 
     </div>
   );
 };
+

@@ -343,3 +343,4 @@ export const GlobalAtmosphericCanvas: React.FC = () => {
     </div>
   );
 };
+
