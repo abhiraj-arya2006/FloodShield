@@ -169,3 +169,4 @@ export const TechDocsModal: React.FC<TechDocsModalProps> = ({ isOpen, onClose })
     </div>
   );
 };
+
