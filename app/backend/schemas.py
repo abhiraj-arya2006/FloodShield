@@ -11,6 +11,8 @@ class GaugeItem(BaseModel):
     ghi_lon: float
     q90_m3s: float
     q95_m3s: float
+    watch_m3s: float
+    warning_m3s: float
 
 
 class GaugesResponse(BaseModel):
@@ -49,6 +51,8 @@ class GaugeForecastRow(BaseModel):
     predicted_m3s: float
     q90_m3s: float
     q95_m3s: float
+    watch_m3s: float
+    warning_m3s: float
     status: Literal["OK", "WATCH", "WARNING"]
     observed_m3s: Optional[float] = None
     mask: bool
@@ -97,13 +101,14 @@ class AlertItem(BaseModel):
     ghi_lat: float
     ghi_lon: float
     lead_day: int
-    approx_hours: str
     status: Literal["WATCH", "WARNING"]
     predicted_m3s: float
     threshold_m3s: float
     q90_m3s: float
     q95_m3s: float
     exceedance_pct: float
+    observed_m3s: Optional[float] = None
+    flood_day: Optional[bool] = None
     drafted_message: str
 
 
@@ -141,6 +146,8 @@ class HealthResponse(BaseModel):
     status: str
     mode: str
     data_period: str
+    predictions: str
+    alert_margin: float
     total_gauges: int
     timestamp: str
 
@@ -148,3 +155,17 @@ class HealthResponse(BaseModel):
 class ErrorResponse(BaseModel):
     detail: str
     error_code: str
+
+
+class AskTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(..., max_length=3000)
+
+
+class AskRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=500)
+    start: str = Field(..., description="Date the forecast was made (YYYY-MM-DD)")
+    day: int = Field(4, ge=1, le=4)
+    gauge_id: Optional[str] = Field(None, max_length=10)
+    lang: Literal["en", "hi"] = "en"
+    history: List[AskTurn] = Field(default_factory=list, max_length=8)

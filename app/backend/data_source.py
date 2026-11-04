@@ -89,6 +89,15 @@ class ReplaySource(DataSource):
                     self._gauges_by_id[gid]["q90_m3s"] = float(r["q90_m3s"])
                     self._gauges_by_id[gid]["q95_m3s"] = float(r["q95_m3s"])
 
+        # The levels that raise alerts: the team's final rule is flow >= q95 * (1 - alert_margin).
+        for g in self._gauges_list:
+            g["warning_m3s"] = round(g["q95_m3s"] * (1.0 - self.alert_margin), 2)
+            g["watch_m3s"] = round(g["q90_m3s"] * (1.0 - self.alert_margin), 2)
+
+        # What produced the forecasts, written by scripts/import_model_predictions.py.
+        meta_path = DATA_DIR / "replay_meta.json"
+        self._meta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
+
         # Load model info
         with open(self.model_info_path, "r", encoding="utf-8") as f:
             self._model_info_raw = yaml.safe_load(f)
@@ -102,7 +111,7 @@ class ReplaySource(DataSource):
             if not self.parquet_path.exists():
                 raise HTTPException(
                     status_code=500,
-                    detail=f"Replay data file missing: {self.parquet_path}. Run scripts/generate_river_data.py first."
+                    detail=f"Replay data file missing: {self.parquet_path}. Run scripts/import_model_predictions.py first."
                 )
             df = pd.read_parquet(self.parquet_path)
             df["gauge_id"] = df["gauge_id"].astype(str)
@@ -112,8 +121,8 @@ class ReplaySource(DataSource):
 
     def _determine_status(self, predicted: float, q90: float, q95: float) -> Tuple[str, float]:
         """Calculates status based on config threshold + optional alert_margin."""
-        warn_th = q95 * (1.0 + self.alert_margin)
-        watch_th = q90 * (1.0 + self.alert_margin)
+        warn_th = q95 * (1.0 - self.alert_margin)
+        watch_th = q90 * (1.0 - self.alert_margin)
 
         if predicted >= warn_th:
             return "WARNING", warn_th
@@ -125,7 +134,9 @@ class ReplaySource(DataSource):
         return HealthResponse(
             status="healthy",
             mode="replay",
-            data_period="2009-2012",
+            data_period="2009-2018",
+            predictions=self._meta.get("predictions", "unknown"),
+            alert_margin=self.alert_margin,
             total_gauges=len(self._gauges_list),
             timestamp=datetime.now(timezone.utc).isoformat()
         )
@@ -201,6 +212,8 @@ class ReplaySource(DataSource):
                     predicted_m3s=pred_val,
                     q90_m3s=g["q90_m3s"],
                     q95_m3s=g["q95_m3s"],
+                    watch_m3s=g["watch_m3s"],
+                    warning_m3s=g["warning_m3s"],
                     status=status,
                     observed_m3s=obs_val,
                     mask=mask_val
@@ -280,13 +293,11 @@ class ReplaySource(DataSource):
         warning_cnt = 0
         watch_cnt = 0
 
-        # Daily model cannot resolve exact hour; approximate time labels
-        hour_lookup = {1: "~15 h", 2: "~39 h", 3: "~63 h", 4: "~87 h"}
-        approx_hours = hour_lookup.get(lead_day, f"~{lead_day * 24} h")
 
         for g in forecast_res.gauges:
             if g.status in ["WATCH", "WARNING"]:
-                th = g.q95_m3s if g.status == "WARNING" else g.q90_m3s
+                # The level that actually raised this alert, including the alert margin.
+                th = g.warning_m3s if g.status == "WARNING" else g.watch_m3s
                 exceedance = round(((g.predicted_m3s - th) / th) * 100, 1)
 
                 if g.status == "WARNING":
@@ -294,13 +305,11 @@ class ReplaySource(DataSource):
                 else:
                     watch_cnt += 1
 
-                # CAP / SMS style simulated draft message
-                urgency = "HIGH" if g.status == "WARNING" else "MODERATE"
-                sms_draft = (
-                    f"[FloodShield ALERT] {g.status} at {g.name} ({g.river} River, {g.basin} Basin). "
-                    f"Predicted streamflow: {g.predicted_m3s:,.0f} m3/s (threshold: {th:,.0f} m3/s, +{exceedance}%). "
-                    f"Expected in {approx_hours} (Lead Day {lead_day}). "
-                    f"Severity: {urgency}. SIMULATED ADVISORY."
+                # A daily model gives a lead day, never an hour.
+                draft = (
+                    f"FloodShield research advisory: {g.status} at {g.name} ({g.river}, {g.basin} basin) for {date}. "
+                    f"Forecast flow {g.predicted_m3s:,.0f} m3/s against a {th:,.0f} m3/s level, forecast {lead_day} day(s) ahead. "
+                    "Not an official flood warning."
                 )
 
                 alert_items.append(
@@ -312,14 +321,15 @@ class ReplaySource(DataSource):
                         ghi_lat=g.ghi_lat,
                         ghi_lon=g.ghi_lon,
                         lead_day=lead_day,
-                        approx_hours=approx_hours,
                         status=g.status,
                         predicted_m3s=g.predicted_m3s,
                         threshold_m3s=th,
                         q90_m3s=g.q90_m3s,
                         q95_m3s=g.q95_m3s,
                         exceedance_pct=exceedance,
-                        drafted_message=sms_draft
+                        observed_m3s=g.observed_m3s,
+                        flood_day=None if g.observed_m3s is None else g.observed_m3s > g.q95_m3s,
+                        drafted_message=draft
                     )
                 )
 

@@ -2,29 +2,29 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-devanagari: 'Noto Sans Devanagari', 'Inter', system-ui, sans-serif;
+  --font-display: Fraunces, 'Anek Devanagari', Georgia, serif;
+  --font-sans: 'Anek Latin', 'Anek Devanagari', system-ui, sans-serif;
+  --font-mono: 'Anek Latin', 'Anek Devanagari', system-ui, sans-serif;
+  --font-devanagari: 'Anek Devanagari', 'Anek Latin', system-ui, sans-serif;
 
-  --color-midnight: #070D1A;
+  --color-midnight: #06192A;
   --color-midnight-light: #0D1628;
   --color-surface: #111C30;
   --color-surface-hover: #16243E;
   --color-border-subtle: rgba(255, 255, 255, 0.08);
   --color-border-accent: rgba(0, 217, 245, 0.25);
 
-  --color-cyan-glow: #00D9F5;
-  --color-turquoise: #13D6B0;
+  --color-cyan-glow: #6FF0E0;
+  --color-turquoise: #6FF0E0;
   --color-critical: #FF454F;
   --color-high: #FF9D28;
   --color-moderate: #F5C518;
-  --color-low: #13D6B0;
+  --color-low: #6FF0E0;
 }
 
 body {
   font-family: var(--font-sans);
-  background-color: #070D1A;
+  background-color: #06192A;
   color: #F4F7FB;
   overflow-x: hidden;
 }
@@ -43,14 +43,14 @@ h1, h2, h3, h4, .font-heading {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #070D1A;
+  background: #06192A;
 }
 ::-webkit-scrollbar-thumb {
   background: #1C2D4A;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00D9F5;
+  background: #6FF0E0;
 }
 
 /* Radar scan sweep animation */
@@ -96,7 +96,7 @@ h1, h2, h3, h4, .font-heading {
 }
 
 .leaflet-container {
-  background-color: #070D1A !important;
+  background-color: #06192A !important;
 }
 
 .leaflet-bar {
@@ -113,5 +113,5 @@ h1, h2, h3, h4, .font-heading {
 
 .leaflet-bar a:hover {
   background-color: #16243E !important;
-  color: #00D9F5 !important;
+  color: #6FF0E0 !important;
 }

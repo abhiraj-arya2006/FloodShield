@@ -1,29 +1,20 @@
-correction_stage: XGBoost residual error correction (Phase 3 planned; out of scope
-  for current serving)
-data_sources:
-- citation: India-WRIS / Zenodo (doi:10.5281/zenodo.14005378)
-  name: CAMELS-IND
-  role: Observed daily streamflow target, gauge coordinates, static catchment attributes
-- citation: HydroSHEDS / WWF
-  name: HydroRIVERS
-  role: Upstream-to-downstream topological river network adjacency and river reach
-    distances
-- citation: Open-Meteo.com (CC BY 4.0)
-  name: Open-Meteo ERA5 Historical Weather Archive
-  role: Historical daily meteorological forcings (precipitation, temperature, surface
-    pressure, wind)
-- citation: Open-Meteo.com (CC BY 4.0)
-  name: Open-Meteo Global Numerical Weather Forecast
-  role: Live weather input pipeline (to be activated in Phase 3)
-description: Spatio-Temporal Graph Neural Network combined with Mamba (Selective State
-  Space) sequence blocks for river streamflow forecasting.
-disclaimer: This is an academic research prototype. Flood thresholds represent local
-  high-flow percentiles (q95) and do not represent official flood levels declared
-  by the Central Water Commission (CWC). Simulated alert dispatch only.
-forecast_horizons: Lead Day 1 (Nowcast), Lead Days 2, 3, 4 (Headline Forecasts)
-forecaster: STG-Mamba (PyTorch implementation with directed river network adjacency)
 model_name: STG-Mamba
+version: Ensemble of three seeds (ens_perlead_hf5)
+description: A Mamba state-space block reads each gauge's weather history, and a graph layer passes information along the river network, to forecast daily flow four days ahead. It is weather-driven and never takes observed river flow as input.
+forecaster: STG-Mamba, three per-lead models with flood-day weighting, averaged
+correction_stage: XGBoost residual correction was tested on 2012 and left off, because it caught about 100 fewer flood days at each lead
+training_years: 1991 - 2008
+validation_years: 2009 - 2012
 time_step: Daily
-training_years: 1980 - 2008 (CAMELS-IND daily records)
-validation_years: 2009 - 2012 (Held-out validation replay window)
-version: Phase 2 (Scaffold Evaluation)
+forecast_horizons: Lead days 1 to 4
+data_sources:
+- name: CAMELS-IND v2.2
+  role: Observed daily streamflow, catchment-mean weather forcings, gauge locations and catchment attributes
+  citation: Zenodo, doi:10.5281/zenodo.14999580
+- name: HydroRIVERS
+  role: The river network used to link gauges upstream to downstream
+  citation: HydroSHEDS / WWF
+- name: NASA Blue Marble
+  role: Earth imagery on this site
+  citation: NASA Visible Earth
+disclaimer: Research prototype, not a warning service. An alert means forecast daily flow near a gauge's own 95th-percentile flow, not an official CWC flood level. Replays use recorded rain for the four forecast days, so live skill will be lower.

@@ -1,266 +1,128 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Check, ChevronDown, Copy } from 'lucide-react';
 import { fetchAlerts } from '../services/api';
 import { AlertItem, AlertsResponse } from '../types';
-import { StatusChip } from '../components/StatusChip';
-import { useLanguage } from '../i18n/LanguageContext';
-import {
-  Bell,
-  Calendar,
-  Clock,
-  Copy,
-  Check,
-  ShieldAlert,
-  AlertTriangle,
-  Info,
-  Radio,
-  Send,
-  CheckCircle2,
-} from 'lucide-react';
+import { DAYS, addDays, flow, forecastError, useForecastStore, useText } from '../platform/store';
+import { LoadError } from '../platform/PlatformNav';
 
 export const AlertsFeedPage: React.FC = () => {
-  const { t } = useLanguage();
-
-  const [date, setDate] = useState<string>('2010-08-15');
-  const [lead, setLead] = useState<number>(2);
-  const [alertsData, setAlertsData] = useState<AlertsResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { L, date, statusWord } = useText();
+  const { start, day, setDay } = useForecastStore();
+  const [data, setData] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [filter, setFilter] = useState<'ALL' | 'WARNING' | 'WATCH'>('ALL');
+  const [openId, setOpenId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [simulatedSentId, setSimulatedSentId] = useState<string | null>(null);
+  const target = addDays(start, day);
 
   useEffect(() => {
-    setLoading(true);
-    fetchAlerts(date, lead)
-      .then((res) => {
-        setAlertsData(res);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to fetch alerts');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [date, lead]);
+    let live = true;
+    setData(null);
+    setError(null);
+    fetchAlerts(target, day)
+      .then((d) => live && setData(d))
+      .catch((err: Error) => live && setError(forecastError(err)));
+    return () => { live = false; };
+  }, [target, day, attempt]);
 
-  const handleCopy = (gaugeId: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(gaugeId);
-    setTimeout(() => {
-      setCopiedId(null);
-    }, 2000);
-  };
+  /* Because this is a replay, each alert can be checked against what the river went on to do. */
+  const warned = data?.alerts.filter((a) => a.status === 'WARNING' && a.flood_day !== null) ?? [];
+  const confirmed = warned.filter((a) => a.flood_day).length;
 
-  const handleSimulateBroadcast = (gaugeId: string) => {
-    setSimulatedSentId(gaugeId);
-    setTimeout(() => {
-      setSimulatedSentId(null);
-    }, 3000);
+  const alerts = (data?.alerts ?? [])
+    .filter((a) => filter === 'ALL' || a.status === filter)
+    .sort((a, b) => Number(b.status === 'WARNING') - Number(a.status === 'WARNING') || b.exceedance_pct - a.exceedance_pct);
+
+  /* Lead days only: a daily model can't say which hour a river crosses its level. */
+  const draft = (a: AlertItem) =>
+    `FloodShield research advisory: ${a.status} at ${a.name} (${a.river}, ${a.basin} basin) for ${date(target)}. ` +
+    `Forecast flow ${flow(a.predicted_m3s)} m³/s, ${a.exceedance_pct}% above its ${flow(a.threshold_m3s)} m³/s alert level, forecast ${a.lead_day} day${a.lead_day === 1 ? '' : 's'} ahead. ` +
+    'Not an official flood warning.';
+
+  const copy = async (a: AlertItem) => {
+    await navigator.clipboard.writeText(draft(a));
+    setCopiedId(a.gauge_id);
+    window.setTimeout(() => setCopiedId((id) => (id === a.gauge_id ? null : id)), 1800);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <main className="pf-page">
+      <div className="pf-page-head">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#00D9F5]/10 border border-[#00D9F5]/25 text-[10px] font-mono text-[#00D9F5] mb-2">
-            <Radio className="w-3 h-3 animate-pulse" />
-            <span>Operational Broadcast Telemetry</span>
-          </div>
-          <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-white flex items-center gap-2.5 tracking-tight">
-            <span>{t('alerts_feed_title')}</span>
+          <h1 aria-live="polite">
+            {data
+              ? L(`${data.warning_count} warnings, ${data.watch_count} on watch`, `${data.warning_count} चेतावनी, ${data.watch_count} निगरानी में`)
+              : L('Reading the rivers', 'नदियों को पढ़ा जा रहा है')}
           </h1>
-          <p className="text-xs text-[#91A2B8] mt-1 font-mono">
-            {t('alerts_feed_subtitle')}
+          <p className="pf-sub">
+            {L(`Forecast for ${date(target)}, made ${day} day${day === 1 ? '' : 's'} ahead.`, `${date(target)} का पूर्वानुमान, ${day} दिन पहले बनाया गया।`)}
+            {warned.length > 0 && ` ${L(`The river reached high flow at ${confirmed} of ${warned.length} warned gauges.`, `चेतावनी वाले ${warned.length} में से ${confirmed} गेज पर नदी उच्च प्रवाह तक पहुँची।`)}`}
           </p>
         </div>
-
-        {/* Lead Selector & Date Picker */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 bg-[#0D1628] border border-white/10 p-1 rounded-xl">
-            {[1, 2, 3, 4].map((ld) => (
-              <button
-                key={ld}
-                onClick={() => setLead(ld)}
-                className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
-                  lead === ld
-                    ? 'bg-[#00D9F5] text-[#070D1A] shadow-[0_0_15px_rgba(0,217,245,0.3)]'
-                    : 'text-[#91A2B8] hover:text-white'
-                }`}
-              >
-                {ld === 1 ? 'Day 1 (Nowcast)' : `+${ld}d`}
-              </button>
+        <div className="pf-controls">
+          <div className="pf-chips" role="group" aria-label={L('Forecast day', 'पूर्वानुमान का दिन')}>
+            {DAYS.map((k) => (
+              <button key={k} type="button" className={k === day ? 'is-on' : ''} aria-pressed={k === day} onClick={() => setDay(k)}>{L(`Day ${k}`, `दिन ${k}`)}</button>
             ))}
           </div>
-
-          <div className="flex items-center gap-2 bg-[#0D1628] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono">
-            <Calendar className="w-4 h-4 text-[#00D9F5]" />
-            <input
-              type="date"
-              min="2009-01-01"
-              max="2012-12-31"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="bg-transparent text-white font-mono font-bold focus:outline-none cursor-pointer text-xs"
-            />
+          <div className="pf-chips" role="group" aria-label={L('Filter by level', 'स्तर से छाँटें')}>
+            {([['ALL', L('All', 'सभी')], ['WARNING', statusWord('WARNING')], ['WATCH', statusWord('WATCH')]] as const).map(([key, label]) => (
+              <button key={key} type="button" className={filter === key ? 'is-on' : ''} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Simulation Integrity Alert Banner */}
-      <div className="p-4 rounded-2xl bg-[#0D1628] border border-cyan-500/30 text-xs text-cyan-200 flex items-start gap-3 shadow-lg">
-        <Info className="w-4 h-4 text-[#00D9F5] shrink-0 mt-0.5" />
-        <div className="space-y-0.5">
-          <span className="font-heading font-bold text-white">{t('simulated_notice')}</span>
-          <p className="text-[11px] text-[#91A2B8] font-mono leading-relaxed">
-            {t('approx_time_hint')}. Messages are pre-formatted for demonstration using standard Common Alerting Protocol (CAP-v1.2) structure. No real external credentials or SMS gateways are utilized.
-          </p>
-        </div>
-      </div>
+      {error && <LoadError message={error} onRetry={() => setAttempt((a) => a + 1)} />}
 
-      {error && (
-        <div className="p-4 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 shrink-0 text-red-400" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* Summary Chips */}
-      {alertsData && (
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-xl bg-[#0D1628] border border-white/10 text-xs font-mono font-bold text-white flex items-center gap-2">
-            <Bell className="w-3.5 h-3.5 text-[#00D9F5]" />
-            <span>Total Active Alerts: {alertsData.total_alerts}</span>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-[#0D1628] border border-[#FF454F]/40 text-xs font-mono font-bold text-[#FF454F] flex items-center gap-1.5 shadow-[0_0_10px_rgba(255,69,79,0.15)]">
-            <ShieldAlert className="w-3.5 h-3.5 text-[#FF454F]" />
-            <span>Warnings: {alertsData.warning_count}</span>
-          </div>
-          <div className="px-3.5 py-1.5 rounded-xl bg-[#0D1628] border border-[#FF9D28]/40 text-xs font-mono font-bold text-[#FF9D28] flex items-center gap-1.5 shadow-[0_0_10px_rgba(255,157,40,0.15)]">
-            <AlertTriangle className="w-3.5 h-3.5 text-[#FF9D28]" />
-            <span>Watches: {alertsData.watch_count}</span>
-          </div>
-        </div>
-      )}
-
-      {/* Alert Feed Cards */}
-      {alertsData && alertsData.alerts.length === 0 ? (
-        <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-12 text-center text-slate-500 text-xs space-y-2">
-          <div className="w-12 h-12 rounded-full bg-[#13D6B0]/10 border border-[#13D6B0]/30 mx-auto flex items-center justify-center">
-            <Check className="w-6 h-6 text-[#13D6B0]" />
-          </div>
-          <h3 className="font-heading font-bold text-sm text-slate-200">{t('no_active_alerts')}</h3>
-          <p className="text-[11px] font-mono text-slate-400 max-w-sm mx-auto">
-            All 46 gauges in Godavari and Mahanadi basins are projected below the watch threshold (q90) for this date and lead horizon.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {alertsData?.alerts.map((alert) => (
-            <div
-              key={alert.gauge_id}
-              className={`bg-[#0D1628] border rounded-2xl p-5 shadow-2xl space-y-3.5 transition-all ${
-                alert.status === 'WARNING'
-                  ? 'border-[#FF454F]/30 hover:border-[#FF454F]/60'
-                  : 'border-[#FF9D28]/30 hover:border-[#FF9D28]/60'
-              }`}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2 border-b border-white/10 pb-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-heading font-extrabold text-base text-white">{alert.name}</h3>
-                    <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-[#111C30] border border-white/10 text-[#00D9F5]">
-                      {alert.gauge_id}
+      <ul className="pf-feed">
+        {alerts.map((a) => {
+          const open = openId === a.gauge_id;
+          const text = draft(a);
+          return (
+            <li key={a.gauge_id} className={`pf-alert is-${a.status}${open ? ' is-open' : ''}`}>
+              <button type="button" className="pf-alert-row" aria-expanded={open} onClick={() => setOpenId(open ? null : a.gauge_id)}>
+                <span className="pf-alert-name">
+                  <b>{a.name}</b>
+                  <small>{a.river === a.basin ? a.river : `${a.river}, ${a.basin}`}</small>
+                  {a.flood_day !== null && (
+                    <span className={`pf-outcome${a.flood_day ? ' is-hit' : ''}`}>
+                      {a.flood_day ? L('River reached high flow', 'नदी उच्च प्रवाह तक पहुँची') : L('River stayed below high flow', 'नदी उच्च प्रवाह से नीचे रही')}
                     </span>
-                  </div>
-                  <p className="text-xs font-mono text-slate-400 mt-0.5">
-                    {alert.river} River • {alert.basin} Basin
-                  </p>
-                </div>
-                <StatusChip status={alert.status} size="md" />
-              </div>
-
-              {/* Timing & Magnitude Readouts */}
-              <div className="grid grid-cols-2 gap-3 text-xs bg-[#070D1A] p-3 rounded-xl border border-white/10 font-mono">
-                <div>
-                  <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-[#00D9F5]" />
-                    <span>{t('approx_time_label')}</span>
-                  </span>
-                  <div className="text-sm font-bold text-white mt-0.5">
-                    {alert.approx_hours}{' '}
-                    <span className="text-[10px] text-slate-400 font-normal">
-                      (Lead Day {alert.lead_day})
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <span className="text-[11px] text-slate-400">Predicted Flow:</span>
-                  <div className="text-sm font-extrabold text-white mt-0.5">
-                    {Math.round(alert.predicted_m3s).toLocaleString()} m³/s{' '}
-                    <span
-                      className={`text-[11px] font-bold ${
-                        alert.status === 'WARNING' ? 'text-[#FF454F]' : 'text-[#FF9D28]'
-                      }`}
-                    >
-                      (+{alert.exceedance_pct}%)
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Drafted CAP / SMS Message Box */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                  <span className="font-semibold uppercase tracking-wider text-slate-300">
-                    {t('drafted_sms_title')}
-                  </span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleSimulateBroadcast(alert.gauge_id)}
-                      className="flex items-center gap-1 text-[#13D6B0] hover:text-white transition-colors cursor-pointer"
-                    >
-                      {simulatedSentId === alert.gauge_id ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-emerald-400 font-bold">Simulated Sent</span>
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-3.5 h-3.5" />
-                          <span>Simulate Send</span>
-                        </>
-                      )}
+                  )}
+                </span>
+                <span className={`pf-status is-${a.status}`}>{statusWord(a.status)}</span>
+                <span className="pf-alert-over">
+                  <b>+{Math.round(a.exceedance_pct)}%</b>
+                  <small>{L('over its level', 'स्तर से ऊपर')}</small>
+                  <small className="pf-alert-flow">{flow(a.predicted_m3s)} m³/s</small>
+                </span>
+                <ChevronDown size={20} className="pf-chevron" aria-hidden="true" />
+              </button>
+              {open && (
+                <div className="pf-alert-body">
+                  <p>{text}</p>
+                  <div className="pf-row">
+                    <button type="button" className="pf-btn" onClick={() => copy(a)}>
+                      {copiedId === a.gauge_id ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
+                      {copiedId === a.gauge_id ? L('Copied', 'कॉपी हो गया') : L('Copy advisory', 'सलाह कॉपी करें')}
                     </button>
-                    <button
-                      onClick={() => handleCopy(alert.gauge_id, alert.drafted_message)}
-                      className="flex items-center gap-1 text-[#00D9F5] hover:text-white transition-colors cursor-pointer"
-                    >
-                      {copiedId === alert.gauge_id ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-emerald-400 font-bold">{t('copied')}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>{t('copy_message')}</span>
-                        </>
-                      )}
-                    </button>
+                    <Link className="pf-link" to={`/gauge/${a.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
                   </div>
                 </div>
-
-                <div className="p-3 rounded-xl bg-[#070D1A] border border-white/10 text-[11px] font-mono text-slate-200 leading-relaxed wrap-break-words select-all">
-                  {alert.drafted_message}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+              )}
+            </li>
+          );
+        })}
+        {data && !alerts.length && (
+          <li className="pf-empty is-large">{L('No alerts match. Choose another day or filter.', 'कोई अलर्ट नहीं मिला। दूसरा दिन या फ़िल्टर चुनें।')}</li>
+        )}
+      </ul>
+      <p className="pf-note">{L('STG-Mamba replay using recorded rain, not a live forecast. Research prototype, not an official flood warning.', 'दर्ज बारिश के साथ STG-Mamba रीप्ले, लाइव पूर्वानुमान नहीं। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं।')}</p>
+    </main>
   );
 };
+
+export default AlertsFeedPage;

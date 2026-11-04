@@ -1,4 +1,4 @@
-alert_margin: 0.0
+alert_margin: 0.1
 data_mode: replay
 headline_lead_days:
 - 2

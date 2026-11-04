@@ -1,167 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import { fetchModelInfo } from '../services/api';
-import { ModelInfoResponse } from '../types';
-import { useLanguage } from '../i18n/LanguageContext';
-import {
-  Database,
-  Cpu,
-  Layers,
-  Calendar,
-  AlertCircle,
-  ExternalLink,
-  BookOpen,
-  ShieldCheck,
-  Activity,
-  Sliders,
-} from 'lucide-react';
+import { DataSourceInfo } from '../types';
+import { useText } from '../platform/store';
+import { TechDocsModal } from '../components/common/TechDocsModal';
 
-interface ModelInfoPageProps {
-  onOpenDocs?: () => void;
-}
-
-export const ModelInfoPage: React.FC<ModelInfoPageProps> = ({ onOpenDocs }) => {
-  const { t } = useLanguage();
-  const [info, setInfo] = useState<ModelInfoResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+/* Scores come from the locked test run: metrics/final_test_results.csv in the model repo. */
+export const ModelInfoPage: React.FC = () => {
+  const { L } = useText();
+  const [sources, setSources] = useState<DataSourceInfo[]>([]);
+  const [docsOpen, setDocsOpen] = useState(false);
 
   useEffect(() => {
-    fetchModelInfo()
-      .then((res) => {
-        setInfo(res);
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to load model architecture data');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    fetchModelInfo().then((i) => setSources(i.data_sources)).catch(() => setSources([]));
   }, []);
 
+  const steps = [
+    {
+      title: L('Read the weather', 'मौसम पढ़ना'),
+      body: L('Each gauge gets 94 days of rain and temperature, plus 16 traits of its catchment such as slope, soil and dams. It never uses a river gauge reading as input.', 'हर गेज को 94 दिनों की बारिश और तापमान तथा जलग्रहण क्षेत्र की 16 विशेषताएँ मिलती हैं। इनपुट में नदी के गेज का माप कभी नहीं होता।'),
+    },
+    {
+      title: L('Learn each river\'s memory', 'हर नदी की स्मृति सीखना'),
+      body: L('A Mamba block reads that sequence with weights shared across gauges. It scales linearly with sequence length, where attention scales quadratically.', 'एक Mamba ब्लॉक सभी गेज के लिए साझा वज़न से इस क्रम को पढ़ता है। यह क्रम की लंबाई के साथ रैखिक रूप से बढ़ता है।'),
+    },
+    {
+      title: L('Follow the water downstream', 'पानी को नीचे की ओर ट्रैक करना'),
+      body: L('A graph layer passes information along 44 real river links, so a gauge knows what is coming from upstream.', 'एक ग्राफ़ परत 44 नदी लिंक के साथ जानकारी भेजती है, ताकि गेज को पता रहे कि ऊपर से क्या आ रहा है।'),
+    },
+    {
+      title: L('Forecast four days', 'चार दिन का पूर्वानुमान'),
+      body: L('Flow is predicted for days 1 to 4. Three seeds are averaged, and flood days weigh more in training so they aren\'t drowned out by ordinary days.', 'दिन 1 से 4 का प्रवाह अनुमानित होता है। तीन सीड का औसत लिया जाता है और प्रशिक्षण में बाढ़ वाले दिनों को अधिक महत्व मिलता है।'),
+    },
+    {
+      title: L('Correct the errors (tested, switched off)', 'त्रुटियाँ सुधारना (जाँचा गया, बंद)'),
+      body: L('XGBoost learned from the forecaster\'s mistakes. On 2012 it cut false alarms but caught about 100 fewer flood days at each lead, so it stays off for flood warning.', 'XGBoost ने मॉडल की अपनी गलतियों से सीखा। 2012 पर इसने गलत अलर्ट घटाए, पर हर लीड पर लगभग 100 कम बाढ़ दिन पकड़े, इसलिए बाढ़ चेतावनी के लिए यह बंद है।'),
+    },
+  ];
+
+  const facts = [
+    { value: '46', label: L('gauges across two basins', 'दो बेसिन में गेज') },
+    { value: '~74%', label: L('of flood days caught at lead days 2 to 4', 'लीड दिन 2 से 4 पर पकड़े गए बाढ़ दिन') },
+    { value: '~38%', label: L('of alerts were false', 'अलर्ट गलत निकले') },
+    { value: '0.62', label: L('median NSE, the standard flow accuracy score', 'माध्य NSE, प्रवाह सटीकता का मानक') },
+  ];
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <main className="pf-page">
+      <div className="pf-page-head">
         <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#00D9F5]/10 border border-[#00D9F5]/25 text-[10px] font-mono text-[#00D9F5] mb-2">
-            <Cpu className="w-3 h-3" />
-            <span>Model Registry & Scientific Ground Truth</span>
-          </div>
-          <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-white flex items-center gap-2.5 tracking-tight">
-            <span>{t('model_info_title')}</span>
-          </h1>
-          <p className="text-xs text-[#91A2B8] mt-1 font-mono">
-            {t('model_info_subtitle')}
+          <h1>{L('A forecast that starts with the sky', 'आसमान से शुरू होने वाला पूर्वानुमान')}</h1>
+          <p className="pf-sub pf-lede">
+            {L('STG-Mamba forecasts river flow at 46 gauges on the Godavari and Mahanadi for the next four days, using weather and the shape of the river network.', 'STG-Mamba गोदावरी और महानदी के 46 गेज पर अगले चार दिनों का नदी प्रवाह मौसम और नदी नेटवर्क की बनावट से बताता है।')}
           </p>
         </div>
-
-        {onOpenDocs && (
-          <button
-            onClick={onOpenDocs}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#00D9F5] hover:bg-[#13D6B0] text-[#070D1A] font-mono font-bold text-xs transition-all shadow-[0_0_15px_rgba(0,217,245,0.3)] cursor-pointer shrink-0"
-          >
-            <BookOpen className="w-4 h-4" />
-            <span>Open Technical Specs</span>
-          </button>
-        )}
       </div>
 
-      {error && (
-        <div className="p-4 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono">
-          {error}
-        </div>
+      <section className="pf-facts">
+        {facts.map((f) => (
+          <div key={f.value}><b>{f.value}</b><span>{f.label}</span></div>
+        ))}
+      </section>
+      <p className="pf-note">
+        {L('Scored once on held-back test years 2013 to 2018, using recorded rain for the four forecast days, so real forecast rain will score lower. For comparison, a seasonal-average baseline at lead day 2 caught about 30% of flood days with 81% of its alerts false, and a median NSE of 0.13.', 'रोके गए टेस्ट वर्ष 2013 से 2018 पर एक बार जाँचा गया, चार पूर्वानुमान दिनों की दर्ज बारिश के साथ, इसलिए असली पूर्वानुमान वर्षा पर स्कोर कम होगा। तुलना के लिए, लीड दिन 2 पर मौसमी औसत आधाररेखा ने लगभग 30% बाढ़ दिन पकड़े, 81% अलर्ट गलत रहे और माध्य NSE 0.13 रहा।')}
+      </p>
+
+      <section className="pf-steps">
+        <h2>{L('How a forecast is made', 'पूर्वानुमान कैसे बनता है')}</h2>
+        <ol>
+          {steps.map((s, i) => (
+            <li key={i}>
+              <span className="pf-step-no">{i + 1}</span>
+              <div><h3>{s.title}</h3><p>{s.body}</p></div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {sources.length > 0 && (
+        <section className="pf-sources">
+          <h2>{L('Open data it stands on', 'जिस खुले डेटा पर यह आधारित है')}</h2>
+          <ul>
+            {sources.map((s) => (
+              <li key={s.name}><b>{s.name}</b><span>{s.role}</span><small>{s.citation}</small></li>
+            ))}
+          </ul>
+        </section>
       )}
 
-      {info && (
-        <div className="space-y-6">
-          {/* Card 1: Core Forecaster & Architecture */}
-          <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-              <div className="w-10 h-10 rounded-xl bg-[#00D9F5]/10 border border-[#00D9F5]/30 flex items-center justify-center text-[#00D9F5] shadow-[0_0_15px_rgba(0,217,245,0.2)]">
-                <Cpu className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-heading font-extrabold text-lg text-white">{info.model_name}</h3>
-                <span className="text-xs text-[#00D9F5] font-mono font-bold">{info.version}</span>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed font-sans">
-              {info.description}
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-[#070D1A] border border-white/10 space-y-1">
-                <p className="text-[11px] font-mono text-[#00D9F5] uppercase font-bold">
-                  {t('forecaster_engine')}
-                </p>
-                <p className="text-xs text-white font-medium">{info.forecaster}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-[#070D1A] border border-white/10 space-y-1">
-                <p className="text-[11px] font-mono text-[#13D6B0] uppercase font-bold">
-                  {t('correction_stage_title')}
-                </p>
-                <p className="text-xs text-white font-medium">{info.correction_stage}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <div className="p-3.5 rounded-xl bg-[#070D1A] border border-white/10 text-xs">
-                <span className="text-[11px] text-slate-400 block font-mono">{t('training_window')}</span>
-                <span className="font-bold text-white font-mono mt-0.5 block">{info.training_years}</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-[#070D1A] border border-white/10 text-xs">
-                <span className="text-[11px] text-slate-400 block font-mono">{t('validation_window')}</span>
-                <span className="font-bold text-[#00D9F5] font-mono mt-0.5 block">{info.validation_years}</span>
-              </div>
-              <div className="p-3.5 rounded-xl bg-[#070D1A] border border-white/10 text-xs">
-                <span className="text-[11px] text-slate-400 block font-mono">Temporal Resolution</span>
-                <span className="font-bold text-[#13D6B0] font-mono mt-0.5 block">{info.time_step} Step</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Data Sources & Lineage */}
-          <div className="bg-[#0D1628] border border-white/10 rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2 border-b border-white/10 pb-3">
-              <BookOpen className="w-5 h-5 text-[#00D9F5]" />
-              <h3 className="font-heading font-extrabold text-base text-white">{t('data_sources_title')}</h3>
-            </div>
-
-            <div className="space-y-3">
-              {info.data_sources.map((src, idx) => (
-                <div
-                  key={idx}
-                  className="p-4 rounded-xl bg-[#070D1A] border border-white/10 space-y-1 text-xs"
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-heading font-bold text-white text-sm">{src.name}</h4>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#111C30] text-[#00D9F5] border border-white/10">
-                      Primary Source
-                    </span>
-                  </div>
-                  <p className="text-slate-300 font-sans">{src.role}</p>
-                  <p className="text-[11px] text-slate-500 font-mono pt-1">Citation: {src.citation}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Card 3: Research Prototype Disclaimer */}
-          <div className="bg-[#0D1628] border border-[#FF9D28]/30 rounded-2xl p-5 shadow-2xl flex items-start gap-3 text-xs text-amber-200/90">
-            <AlertCircle className="w-5 h-5 text-[#FF9D28] shrink-0 mt-0.5" />
-            <div className="space-y-1 font-mono">
-              <h4 className="font-bold text-white text-xs uppercase tracking-wider">
-                System Integrity & Official Disclaimers
-              </h4>
-              <p className="text-[11px] leading-relaxed text-amber-200/80">
-                {info.disclaimer}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      <div className="pf-row pf-foot-actions">
+        <button type="button" className="pf-btn" onClick={() => setDocsOpen(true)}>{L('Read the technical notes', 'तकनीकी नोट पढ़ें')}</button>
+      </div>
+      <p className="pf-note">
+        {L('Research prototype, not a warning service. A warning means forecast flow at or above 90% of a gauge\'s own 95th-percentile flow, set low on purpose to catch more floods. It is not an official danger level. Forecasts on this site are the model\'s saved replays using recorded rain, so live skill will be lower. Earth imagery: NASA.', 'शोध प्रोटोटाइप, चेतावनी सेवा नहीं। चेतावनी का अर्थ है पूर्वानुमानित प्रवाह गेज के अपने 95वें प्रतिशतक के 90% या उससे ऊपर है, जो अधिक बाढ़ पकड़ने के लिए जानबूझकर कम रखा गया है। यह आधिकारिक खतरे का स्तर नहीं है। इस साइट के पूर्वानुमान दर्ज बारिश के साथ मॉडल के सहेजे गए रीप्ले हैं, इसलिए लाइव प्रदर्शन कम होगा। पृथ्वी की छवि: NASA।')}
+      </p>
+      <TechDocsModal isOpen={docsOpen} onClose={() => setDocsOpen(false)} />
+    </main>
   );
 };
+
+export default ModelInfoPage;

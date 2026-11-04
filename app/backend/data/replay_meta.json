@@ -1,0 +1,12 @@
+{
+  "predictions": "stg_mamba",
+  "run": "ens_perlead_hf5",
+  "members": [
+    "stg_mamba_perlead_hf5_best.pt",
+    "stg_mamba_perlead_hf5_s1_best.pt",
+    "stg_mamba_perlead_hf5_s2_best.pt"
+  ],
+  "alert_margin": 0.1,
+  "first_forecast_date": "2009-01-01",
+  "last_forecast_date": "2018-12-31"
+}

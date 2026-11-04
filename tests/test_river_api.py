@@ -12,7 +12,9 @@ def test_health_endpoint():
     data = res.json()
     assert data["status"] == "healthy"
     assert data["mode"] == "replay"
-    assert data["data_period"] == "2009-2012"
+    assert data["data_period"] == "2009-2018"
+    assert data["predictions"] == "stg_mamba"
+    assert data["alert_margin"] == 0.1
     assert data["total_gauges"] == 46
 
 
@@ -57,9 +59,9 @@ def test_dates_endpoint():
     res = client.get("/api/dates")
     assert res.status_code == 200
     data = res.json()
-    assert data["total_dates"] == 1461
+    assert data["total_dates"] == 3652
     assert data["min_date"] == "2009-01-01"
-    assert data["max_date"] == "2012-12-31"
+    assert data["max_date"] == "2018-12-31"
 
 
 def test_forecast_endpoint_valid():
@@ -111,11 +113,11 @@ def test_forecast_date_out_of_range():
 
 
 def test_single_gauge_forecast_valid():
-    res = client.get("/api/gauges/01001/forecast?date=2010-08-15")
+    res = client.get("/api/gauges/03005/forecast?date=2010-08-15")
     assert res.status_code == 200
     data = res.json()
-    assert data["gauge_id"] == "01001"
-    assert data["name"] == "Gangapur"
+    assert data["gauge_id"] == "03005"
+    assert data["name"] == "Ashti"
     assert data["basin"] == "Godavari"
     assert len(data["lead_days"]) == 4
     leads = [ld["lead_day"] for ld in data["lead_days"]]
@@ -139,9 +141,8 @@ def test_alerts_endpoint():
     # If any alerts exist, check structure and simulated draft
     for alert in data["alerts"]:
         assert alert["status"] in ["WATCH", "WARNING"]
-        assert alert["approx_hours"] == "~39 h"
-        assert "[FloodShield ALERT]" in alert["drafted_message"]
-        assert "SIMULATED ADVISORY" in alert["drafted_message"]
+        assert "Not an official flood warning" in alert["drafted_message"]
+        assert " h " not in alert["drafted_message"]  # A daily model gives lead days, never hours.
         assert alert["predicted_m3s"] >= alert["threshold_m3s"]
 
 
@@ -152,12 +153,11 @@ def test_model_info_endpoint():
     assert data["model_name"] == "STG-Mamba"
     assert "Mamba" in data["forecaster"]
     assert "XGBoost" in data["correction_stage"]
-    assert "1980 - 2008" in data["training_years"]
+    assert "1991 - 2008" in data["training_years"]
     assert "2009 - 2012" in data["validation_years"]
     sources = [s["name"] for s in data["data_sources"]]
-    assert "CAMELS-IND" in sources
+    assert "CAMELS-IND v2.2" in sources
     assert "HydroRIVERS" in sources
-    assert "Open-Meteo ERA5 Historical Weather Archive" in sources
 
 
 def test_live_source_501_not_implemented():
@@ -171,3 +171,25 @@ def test_live_source_501_not_implemented():
     finally:
         app.dependency_overrides.clear()
 
+
+
+def test_status_follows_the_alert_rule():
+    """Warnings fire at q95 * (1 - margin), and the alert's percentage is measured from that level."""
+    gauges = client.get("/api/forecast?date=2013-07-13&lead=4").json()["gauges"]
+    assert {g["status"] for g in gauges} >= {"WARNING"}
+    for g in gauges:
+        assert g["warning_m3s"] == round(g["q95_m3s"] * 0.9, 2)
+        assert g["watch_m3s"] == round(g["q90_m3s"] * 0.9, 2)
+        expected = "WARNING" if g["predicted_m3s"] >= g["warning_m3s"] else "WATCH" if g["predicted_m3s"] >= g["watch_m3s"] else "OK"
+        assert g["status"] == expected
+
+
+def test_alert_reports_what_the_river_did():
+    alerts = client.get("/api/alerts?date=2013-07-13&lead=4").json()["alerts"]
+    assert alerts
+    for a in alerts:
+        assert a["exceedance_pct"] >= 0
+        if a["observed_m3s"] is None:
+            assert a["flood_day"] is None
+        else:
+            assert a["flood_day"] == (a["observed_m3s"] > a["q95_m3s"])

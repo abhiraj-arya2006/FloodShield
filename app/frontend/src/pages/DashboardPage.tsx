@@ -1,473 +1,263 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import {
-  fetchGauges,
-  fetchEdges,
-  fetchDates,
-  fetchForecast,
-  fetchAlerts,
-} from '../services/api';
-import {
-  GaugeItem,
-  EdgeItem,
-  GaugeForecastRow,
-  ForecastResponse,
-  AlertItem,
-} from '../types';
-import { SummaryCards } from '../components/SummaryCards';
-import { RiverMap } from '../components/RiverMap';
-import { StatusChip } from '../components/StatusChip';
-import { PriorityActionTerminal } from '../components/common/PriorityActionTerminal';
-import { GlobalAtmosphericCanvas } from '../components/common/GlobalAtmosphericCanvas';
-import { useLanguage } from '../i18n/LanguageContext';
-import {
-  Calendar,
-  ChevronRight,
-  ShieldAlert,
-  AlertTriangle,
-  Layers,
-  Filter,
-  Play,
-  Pause,
-  Sliders,
-  BookOpen,
-  Search,
-  Waves,
-  Cpu,
-  ArrowRight,
-  Activity,
-} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import gsap from 'gsap';
+import { Pause, Play, Search } from 'lucide-react';
+import { AlertStatus, GaugeForecastRow } from '../types';
+import { DAYS, LAST_DAY, addDays, countStatus, flow, useForecastStore, useFourDays, useNetwork, useText } from '../platform/store';
+import { LoadError } from '../platform/PlatformNav';
 
-interface DashboardPageProps {
-  onOpenWhatIf?: () => void;
-  onOpenDocs?: () => void;
-}
+const COLORS: Record<AlertStatus, string> = { OK: '#D9A95C', WATCH: '#F5B921', WARNING: '#FF4D7D' };
 
-export const DashboardPage: React.FC<DashboardPageProps> = ({
-  onOpenWhatIf,
-  onOpenDocs,
-}) => {
-  const { t } = useLanguage();
-  const navigate = useNavigate();
+/* Map views, in degrees of longitude and latitude. All share one shape, so the zoom never distorts. */
+const VIEW_RATIO = 1.895;
+const VIEWS: Record<string, { lon: number; lat: number; width: number }> = {
+  ALL: { lon: 80.7, lat: 20.2, width: 22 },
+  Godavari: { lon: 79.8, lat: 19.8, width: 15 },
+  Mahanadi: { lon: 83, lat: 21.6, width: 10.5 },
+};
 
-  // State
-  const [gauges, setGauges] = useState<GaugeItem[]>([]);
-  const [edges, setEdges] = useState<EdgeItem[]>([]);
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>('2010-08-15'); // Monsoon peak date
-  const [selectedLead, setSelectedLead] = useState<number>(2); // Default to headline lead 2
-  const [selectedBasin, setSelectedBasin] = useState<string>('ALL'); // ALL, Godavari, Mahanadi
-  const [selectedRiskFilter, setSelectedRiskFilter] = useState<string>('ALL'); // ALL, WARNING, WATCH, OK
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [isPlayingTimeline, setIsPlayingTimeline] = useState<boolean>(false);
+export const DashboardPage: React.FC = () => {
+  const { L, date, statusWord } = useText();
+  const { start, day, setStart, setDay } = useForecastStore();
+  const { network, error: netError, retry: retryNet } = useNetwork();
+  const { rows, error, retry } = useFourDays(start);
+  const [basin, setBasin] = useState('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'WARNING' | 'WATCH'>('ALL');
+  const [query, setQuery] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [unit, setUnit] = useState(0.02);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const view = useRef({ ...VIEWS.ALL });
 
-  const [forecastData, setForecastData] = useState<ForecastResponse | null>(null);
-  const [alertsData, setAlertsData] = useState<AlertItem[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  /* Keep marks the same size on screen at any zoom. */
+  const applyView = () => {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const { lon, lat, width } = view.current;
+    const height = width / VIEW_RATIO;
+    svg.setAttribute('viewBox', `${lon - width / 2} ${-lat - height / 2} ${width} ${height}`);
+    const scale = Math.max(svg.clientWidth / width, svg.clientHeight / height);
+    if (scale) setUnit(1 / scale);
+  };
 
-  // Load initial metadata on mount
   useEffect(() => {
-    Promise.all([fetchGauges(), fetchEdges(), fetchDates()])
-      .then(([gRes, eRes, dRes]) => {
-        setGauges(gRes.gauges);
-        setEdges(eRes.edges);
-        setAvailableDates(dRes.dates);
-        if (dRes.dates.length > 0 && !dRes.dates.includes(selectedDate)) {
-          setSelectedDate(dRes.dates[0]);
-        }
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to load initial metadata');
-      });
+    applyView();
+    window.addEventListener('resize', applyView);
+    return () => window.removeEventListener('resize', applyView);
   }, []);
 
-  // Fetch forecast & alerts whenever date or lead changes
   useEffect(() => {
-    if (!selectedDate) return;
-    setLoading(true);
-    Promise.all([
-      fetchForecast(selectedDate, selectedLead),
-      fetchAlerts(selectedDate, selectedLead),
-    ])
-      .then(([fRes, aRes]) => {
-        setForecastData(fRes);
-        setAlertsData(aRes.alerts);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to load forecast for selected date');
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [selectedDate, selectedLead]);
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tween = gsap.to(view.current, { ...VIEWS[basin], duration: still ? 0 : 1.4, ease: 'power3.inOut', onUpdate: applyView });
+    return () => { tween.kill(); };
+  }, [basin]);
 
-  // Timeline auto-play effect (advances lead days 1 -> 2 -> 3 -> 4 -> 1)
   useEffect(() => {
-    let timer: any = null;
-    if (isPlayingTimeline) {
-      timer = setInterval(() => {
-        setSelectedLead((prev) => (prev >= 4 ? 1 : prev + 1));
-      }, 2400);
-    }
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [isPlayingTimeline]);
+    if (!playing) return;
+    const timer = window.setInterval(() => {
+      const current = useForecastStore.getState().day;
+      if (current >= LAST_DAY) setPlaying(false);
+      else setDay(current + 1);
+    }, 1300);
+    return () => window.clearInterval(timer);
+  }, [playing, setDay]);
 
-  // Filtered gauges and forecast rows
-  const filteredGauges = useMemo(() => {
-    if (selectedBasin === 'ALL') return gauges;
-    return gauges.filter((g) => g.basin === selectedBasin);
-  }, [gauges, selectedBasin]);
+  const shownDate = addDays(start, day);
+  const today = rows?.[day];
+  const warnings = countStatus(rows, day, 'WARNING');
+  const watches = countStatus(rows, day, 'WATCH');
+  const inBasin = (r: { basin: string }) => basin === 'ALL' || r.basin === basin;
 
-  const filteredForecastRows = useMemo(() => {
-    if (!forecastData) return [];
-    return forecastData.gauges.filter((g) => {
-      const matchBasin = selectedBasin === 'ALL' || g.basin === selectedBasin;
-      const matchRisk = selectedRiskFilter === 'ALL' || g.status === selectedRiskFilter;
-      const matchSearch =
-        searchQuery.trim() === '' ||
-        g.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.river.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        g.gauge_id.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchBasin && matchRisk && matchSearch;
-    });
-  }, [forecastData, selectedBasin, selectedRiskFilter, searchQuery]);
+  const list = useMemo(() => {
+    if (!today) return [];
+    const q = query.trim().toLowerCase();
+    return [...today.values()]
+      .filter((r) => inBasin(r))
+      .filter((r) => (q ? `${r.name} ${r.river}`.toLowerCase().includes(q) : r.status !== 'OK'))
+      .filter((r) => filter === 'ALL' || r.status === filter)
+      .sort((a, b) => b.predicted_m3s / b.q95_m3s - a.predicted_m3s / a.q95_m3s);
+  }, [today, query, filter, basin]);
 
-  // Filtered alerts for the terminal
-  const filteredAlerts = useMemo(() => {
-    return alertsData.filter((a) => {
-      if (selectedBasin === 'ALL') return true;
-      return a.basin === selectedBasin;
-    });
-  }, [alertsData, selectedBasin]);
+  /* With many warnings, only the most extreme are named, so the map stays readable. */
+  const named = useMemo(() => {
+    if (!today || window.innerWidth <= 760) return new Set<string>();
+    return new Set([...today.values()]
+      .filter((r) => r.status === 'WARNING')
+      .sort((a, b) => b.predicted_m3s / b.q95_m3s - a.predicted_m3s / a.q95_m3s)
+      .slice(0, 8)
+      .map((r) => r.gauge_id));
+  }, [today]);
 
-  // Highest peak gauge for KPI card
-  const peakGauge = useMemo(() => {
-    if (filteredForecastRows.length === 0) return null;
-    return [...filteredForecastRows].sort((a, b) => b.predicted_m3s - a.predicted_m3s)[0];
-  }, [filteredForecastRows]);
+  const selected: GaugeForecastRow | undefined = selectedId ? today?.get(selectedId) : undefined;
+  const px = (n: number) => n * unit;
 
-  // Active alerts list for the side panel
-  const activeAlertGauges = useMemo(() => {
-    return filteredForecastRows.filter((g) => g.status === 'WARNING' || g.status === 'WATCH');
-  }, [filteredForecastRows]);
-
-  const warningCount = useMemo(() => {
-    return filteredForecastRows.filter((g) => g.status === 'WARNING').length;
-  }, [filteredForecastRows]);
-
-  const watchCount = useMemo(() => {
-    return filteredForecastRows.filter((g) => g.status === 'WATCH').length;
-  }, [filteredForecastRows]);
+  const loadError = netError || error;
 
   return (
-    <div className="space-y-8 relative">
-      {/* Dynamic Atmospheric Canvas Background */}
-      <GlobalAtmosphericCanvas />
+    <main className="pf-map-page">
+      <div className="pf-map">
+        <svg ref={svgRef} preserveAspectRatio="xMidYMid slice" role="group" aria-label={L('Satellite map of the Godavari and Mahanadi with 46 gauges', 'गोदावरी और महानदी का उपग्रह नक्शा, 46 गेज के साथ')}>
+          <image href="/textures/earth-day.jpg" x="-180" y="-90" width="360" height="180" preserveAspectRatio="none" className="pf-sat" />
+          {network?.edges.map((e) => {
+            const a = network.gauges.find((g) => g.gauge_id === e.from_gauge_id);
+            const b = network.gauges.find((g) => g.gauge_id === e.to_gauge_id);
+            if (!a || !b) return null;
+            const row = today?.get(a.gauge_id);
+            const ratio = row ? Math.min(2.2, row.predicted_m3s / row.q95_m3s) : 0.5;
+            const base = 1.6 + Math.sqrt(a.q95_m3s) / 26;
+            const d = `M${a.ghi_lon} ${-a.ghi_lat}L${b.ghi_lon} ${-b.ghi_lat}`;
+            const dim = !inBasin(a);
+            return (
+              <g key={e.from_gauge_id} opacity={dim ? 0.25 : 1}>
+                <path d={d} className="pf-river" style={{ stroke: COLORS[row?.status ?? 'OK'], strokeWidth: px(base * (0.55 + ratio * 1.5)) }} />
+                <path d={d} className="pf-flowline" style={{ strokeWidth: px(1.6), strokeDasharray: `${px(1)} ${px(26)}`, ['--dash' as string]: px(27) }} />
+              </g>
+            );
+          })}
+          {network?.gauges.map((g) => {
+            const row = today?.get(g.gauge_id);
+            const status = row?.status ?? 'OK';
+            const isSelected = g.gauge_id === selectedId;
+            const r = status === 'WARNING' ? 7 : status === 'WATCH' ? 5 : 3.5;
+            return (
+              <g
+                key={g.gauge_id}
+                className="pf-pin"
+                opacity={inBasin(g) ? 1 : 0.25}
+                role="button"
+                tabIndex={0}
+                aria-label={`${g.name}, ${statusWord(status)}`}
+                aria-pressed={isSelected}
+                onClick={() => setSelectedId(g.gauge_id)}
+                onFocus={() => setSelectedId(g.gauge_id)}
+                onMouseEnter={() => setSelectedId(g.gauge_id)}
+              >
+                <circle cx={g.ghi_lon} cy={-g.ghi_lat} r={px(16)} fill="transparent" />
+                {status === 'WARNING' && <circle className="pf-ping" cx={g.ghi_lon} cy={-g.ghi_lat} r={px(r)} style={{ strokeWidth: px(2) }} />}
+                <circle
+                  cx={g.ghi_lon}
+                  cy={-g.ghi_lat}
+                  r={px(isSelected ? r + 2 : r)}
+                  fill={status === 'OK' ? '#0a2233' : COLORS[status]}
+                  stroke={isSelected ? '#ffffff' : status === 'OK' ? COLORS.OK : '#ffffff'}
+                  strokeWidth={px(isSelected ? 2.5 : 1.5)}
+                />
+                {(isSelected || named.has(g.gauge_id)) && (
+                  <text x={g.ghi_lon} y={-g.ghi_lat - px(r + 7)} textAnchor="middle" className="pf-pin-name" style={{ fontSize: px(14), strokeWidth: px(4) }}>
+                    {g.name}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
 
-      {/* Hero Headline Section */}
-      <div className="relative z-10 pt-2 pb-1 text-center max-w-4xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00D9F5]/10 border border-[#00D9F5]/30 text-xs font-mono text-[#00D9F5]">
-          <Activity className="w-3.5 h-3.5" />
-          <span>Fluvial Network Operational Command • Godavari & Mahanadi</span>
-        </div>
-
-        <h1 className="font-heading font-extrabold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white">
-          Real-Time Fluvial Flood Intelligence Platform
+      <section className="pf-float pf-left">
+        <h1 aria-live="polite">
+          {rows
+            ? warnings
+              ? L(`${warnings} ${warnings === 1 ? 'gauge' : 'gauges'} on flood warning`, `${warnings} गेज पर बाढ़ चेतावनी`)
+              : L('No flood warnings', 'कोई बाढ़ चेतावनी नहीं')
+            : L('Reading the rivers', 'नदियों को पढ़ा जा रहा है')}
         </h1>
-
-        <p className="text-sm text-[#91A2B8] max-w-2xl mx-auto leading-relaxed">
-          Predictive multi-horizon streamflow forecasting powered by the <strong>STG-Mamba</strong> spatiotemporal graph neural architecture across 46 CAMELS-IND gauging stations.
+        <p className="pf-sub">
+          {date(shownDate)}. {L(`${watches} more on watch.`, `${watches} और निगरानी में।`)}
         </p>
 
-        {/* Quick Launch Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          {onOpenWhatIf && (
-            <button
-              onClick={onOpenWhatIf}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold text-[#070D1A] bg-[#00D9F5] hover:bg-[#13D6B0] rounded-xl transition-all shadow-[0_0_20px_rgba(0,217,245,0.3)] hover:shadow-[0_0_25px_rgba(19,214,176,0.4)] cursor-pointer"
-            >
-              <Sliders className="w-4 h-4" />
-              <span>Launch What-If Sandbox</span>
-            </button>
-          )}
+        {loadError && <LoadError message={loadError} onRetry={() => { retry(); retryNet(); }} />}
 
-          {onOpenDocs && (
-            <button
-              onClick={onOpenDocs}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono font-semibold text-white bg-[#111C30] hover:bg-[#16243E] border border-white/10 rounded-xl transition-colors cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4 text-[#00D9F5]" />
-              <span>Technical Architecture</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Mission Control Bar: Lead Horizons + Timeline Auto-Play + Date + Filters */}
-      <div className="relative z-10 bg-[#0D1628]/95 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-md space-y-4">
-        {/* Top Control Row */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Left: Lead Day Buttons & Timeline Playback */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-mono font-bold text-[#91A2B8] uppercase tracking-wider mr-1">
-              {t('lead_day_label')}
-            </span>
-
-            {/* Play/Pause Timeline Auto-Play Button */}
-            <button
-              onClick={() => setIsPlayingTimeline(!isPlayingTimeline)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                isPlayingTimeline
-                  ? 'bg-[#13D6B0] text-[#070D1A] shadow-[0_0_15px_rgba(19,214,176,0.4)]'
-                  : 'bg-[#111C30] text-slate-300 border border-white/10 hover:border-[#00D9F5]/40 hover:text-white'
-              }`}
-              title={isPlayingTimeline ? 'Pause Lead Timeline' : 'Auto-Play 4-Day Forecast Timeline'}
-            >
-              {isPlayingTimeline ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              <span>{isPlayingTimeline ? 'Auto-Advancing' : 'Play Sequence'}</span>
-            </button>
-
-            {[
-              { day: 1, label: t('nowcast'), isNowcast: true },
-              { day: 2, label: t('headline_day2'), isNowcast: false },
-              { day: 3, label: t('headline_day3'), isNowcast: false },
-              { day: 4, label: t('headline_day4'), isNowcast: false },
-            ].map((item) => (
-              <button
-                key={item.day}
-                onClick={() => {
-                  setIsPlayingTimeline(false);
-                  setSelectedLead(item.day);
-                }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                  selectedLead === item.day
-                    ? 'bg-[#00D9F5] text-[#070D1A] shadow-[0_0_15px_rgba(0,217,245,0.35)]'
-                    : 'bg-[#111C30] border border-white/10 text-[#91A2B8] hover:text-white hover:bg-[#16243E]'
-                }`}
-              >
-                <span>{item.label}</span>
-                {item.isNowcast && (
-                  <span className="text-[10px] uppercase font-mono px-1 rounded bg-[#070D1A]/50">
-                    Nowcast
-                  </span>
-                )}
+        <div className="pf-days" role="group" aria-label={L('Forecast day', 'पूर्वानुमान का दिन')}>
+          {DAYS.map((k) => {
+            const count = countStatus(rows, k, 'WARNING');
+            return (
+              <button key={k} type="button" className={k === day ? 'is-on' : ''} aria-pressed={k === day} onClick={() => { setPlaying(false); setDay(k); }}>
+                <span className="pf-day-bar"><i style={{ height: `${Math.min(100, 8 + count * 7)}%` }} /></span>
+                <b>{count}</b>
+                <span>{L(`Day ${k}`, `दिन ${k}`)}</span>
               </button>
-            ))}
-          </div>
-
-          {/* Right: Date Picker & Basin Filter */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Basin Filter */}
-            <div className="flex items-center gap-1.5 bg-[#111C30] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono">
-              <Filter className="w-3.5 h-3.5 text-[#00D9F5]" />
-              <select
-                value={selectedBasin}
-                onChange={(e) => setSelectedBasin(e.target.value)}
-                className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
-              >
-                <option value="ALL" className="bg-[#0D1628]">All Basins (46)</option>
-                <option value="Godavari" className="bg-[#0D1628]">Godavari Basin (27)</option>
-                <option value="Mahanadi" className="bg-[#0D1628]">Mahanadi Basin (19)</option>
-              </select>
-            </div>
-
-            {/* Date Picker (2009-2012) */}
-            <div className="flex items-center gap-2 bg-[#111C30] border border-white/10 rounded-xl px-3 py-1.5 text-xs font-mono">
-              <Calendar className="w-4 h-4 text-[#00D9F5]" />
-              <span className="text-slate-400 hidden sm:inline">{t('date_label')}</span>
-              <input
-                type="date"
-                min="2009-01-01"
-                max="2012-12-31"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-transparent text-white font-mono font-bold focus:outline-none cursor-pointer text-xs"
-              />
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-        {/* Secondary Filter Row: Search & Status Filter */}
-        <div className="pt-2 border-t border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-          <div className="flex items-center gap-2 flex-1 max-w-md bg-[#070D1A] border border-white/10 rounded-xl px-3 py-1.5">
-            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search by gauge ID, name, or river (e.g., Dowleswaram, Pravara, Tel)..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-slate-200 placeholder-slate-500 focus:outline-none w-full text-xs font-sans"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="text-slate-500 hover:text-white cursor-pointer"
-              >
-                ×
-              </button>
-            )}
-          </div>
+        <div className="pf-row">
+          <button
+            type="button"
+            className="pf-btn"
+            disabled={!rows}
+            onClick={() => {
+              if (playing) { setPlaying(false); return; }
+              setDay(1);
+              setPlaying(true);
+            }}
+          >
+            {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
+            {playing ? L('Pause', 'रोकें') : L('Play four days', 'चार दिन चलाएँ')}
+          </button>
+          <label className="pf-date">
+            <span>{L('Forecast made on', 'पूर्वानुमान की तारीख')}</span>
+            <input type="date" value={start} min={network?.min} max={network?.max} onChange={(e) => e.target.value && setStart(e.target.value)} />
+          </label>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Risk Filter:</span>
-            {['ALL', 'WARNING', 'WATCH', 'OK'].map((r) => (
-              <button
-                key={r}
-                onClick={() => setSelectedRiskFilter(r)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-mono transition-colors cursor-pointer ${
-                  selectedRiskFilter === r
-                    ? 'bg-white/20 text-white font-bold'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                {r}
-              </button>
+        <div className="pf-chips" role="group" aria-label={L('River basin', 'नदी बेसिन')}>
+          {[['ALL', L('Both rivers', 'दोनों नदियाँ')], ['Godavari', L('Godavari', 'गोदावरी')], ['Mahanadi', L('Mahanadi', 'महानदी')]].map(([key, label]) => (
+            <button key={key} type="button" className={basin === key ? 'is-on' : ''} aria-pressed={basin === key} onClick={() => setBasin(key)}>{label}</button>
+          ))}
+        </div>
+        <p className="pf-disclaim">{L('STG-Mamba replay using recorded rain, not a live forecast. Research prototype, not an official flood warning.', 'दर्ज बारिश के साथ STG-Mamba रीप्ले, लाइव पूर्वानुमान नहीं। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं।')}</p>
+      </section>
+
+      <aside className="pf-float pf-right">
+        {selected ? (
+          <div className="pf-detail">
+            <div className="pf-detail-head">
+              <h2>{selected.name}</h2>
+              <span className={`pf-status is-${selected.status}`}>{statusWord(selected.status)}</span>
+            </div>
+            <p className="pf-sub">{selected.river === selected.basin ? selected.river : `${selected.river}, ${selected.basin}`}</p>
+            <p className="pf-big">{flow(selected.predicted_m3s)} <small>m³/s</small></p>
+            <div className="pf-meter" aria-hidden="true">
+              <i className={`is-${selected.status}`} style={{ width: `${Math.min(100, (selected.predicted_m3s / selected.q95_m3s) * 62.5)}%` }} />
+              <em />
+            </div>
+            <p className="pf-sub">
+              {L(`${Math.round((selected.predicted_m3s / selected.q95_m3s) * 100)}% of this gauge's high-flow level`, `इस गेज के उच्च प्रवाह स्तर का ${Math.round((selected.predicted_m3s / selected.q95_m3s) * 100)}%`)}
+            </p>
+            <Link className="pf-link" to={`/gauge/${selected.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
+          </div>
+        ) : (
+          <p className="pf-sub pf-hint">{L('Point at any gauge on the map to read its forecast.', 'पूर्वानुमान पढ़ने के लिए नक्शे पर किसी गेज पर जाएँ।')}</p>
+        )}
+
+        <div className="pf-listhead">
+          <label className="pf-search">
+            <Search size={16} aria-hidden="true" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={L('Search 46 gauges', '46 गेज खोजें')} aria-label={L('Search gauges', 'गेज खोजें')} />
+          </label>
+          <div className="pf-chips is-small" role="group" aria-label={L('Filter by level', 'स्तर से छाँटें')}>
+            {([['ALL', L('All', 'सभी')], ['WARNING', statusWord('WARNING')], ['WATCH', statusWord('WATCH')]] as const).map(([key, label]) => (
+              <button key={key} type="button" className={filter === key ? 'is-on' : ''} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Error state */}
-      {error && (
-        <div className="relative z-10 p-4 rounded-xl bg-red-950/50 border border-red-500/50 text-red-300 text-xs font-mono flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 shrink-0 text-red-400" />
-          <span>{error}</span>
-        </div>
-      )}
-
-      {/* 4 KPI Summary Cards */}
-      <div className="relative z-10">
-        <SummaryCards
-          totalGauges={filteredGauges.length}
-          warningCount={warningCount}
-          watchCount={watchCount}
-          peakGauge={peakGauge}
-        />
-      </div>
-
-      {/* Main Operations Grid: River Map (8 cols) + Active Alerts Side Panel (4 cols) */}
-      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* River Map View */}
-        <div className="lg:col-span-8 flex flex-col min-h-130">
-          <RiverMap
-            gauges={filteredGauges}
-            edges={edges}
-            forecastRows={filteredForecastRows}
-            selectedBasin={selectedBasin}
-          />
-        </div>
-
-        {/* Active Alerts Side Panel */}
-        <div className="lg:col-span-4 bg-[#0D1628] border border-white/10 rounded-2xl p-4 shadow-2xl flex flex-col h-130">
-          <div className="flex items-center justify-between border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-[#00D9F5]" />
-              <h3 className="font-heading font-extrabold text-sm text-white">
-                {t('active_alerts_title')}
-              </h3>
-            </div>
-            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#111C30] text-slate-300 border border-white/10">
-              {activeAlertGauges.length} Active
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-2.5 mt-3 pr-1">
-            {activeAlertGauges.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500 text-xs font-mono">
-                <div className="w-10 h-10 rounded-full bg-[#13D6B0]/10 border border-[#13D6B0]/30 flex items-center justify-center mb-2">
-                  <span className="text-[#13D6B0] font-bold">✓</span>
-                </div>
-                <p className="font-semibold text-slate-300">{t('no_alerts_message')}</p>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Try selecting a mid-August date (e.g. 2010-08-15) to inspect peak monsoon flood events.
-                </p>
-              </div>
-            ) : (
-              activeAlertGauges.map((alert) => (
-                <div
-                  key={alert.gauge_id}
-                  onClick={() => navigate(`/gauge/${alert.gauge_id}`)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-1.5 ${
-                    alert.status === 'WARNING'
-                      ? 'bg-[#111C30] border-[#FF454F]/30 hover:border-[#FF454F]/60'
-                      : 'bg-[#0D1628] border-[#FF9D28]/30 hover:border-[#FF9D28]/60'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-heading font-bold text-xs text-white">{alert.name}</h4>
-                      <p className="text-[11px] font-mono text-slate-400">
-                        {alert.river} River ({alert.basin})
-                      </p>
-                    </div>
-                    <StatusChip status={alert.status} size="sm" />
-                  </div>
-
-                  <div className="flex items-center justify-between pt-1 border-t border-white/10 text-xs font-mono">
-                    <div>
-                      <span className="text-slate-400 text-[11px]">Predicted: </span>
-                      <span className="font-extrabold text-white">
-                        {Math.round(alert.predicted_m3s).toLocaleString()} m³/s
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-[11px] text-[#00D9F5] font-semibold">
-                      <span>View</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Operational Priority Action Triage Terminal */}
-      <div className="relative z-10">
-        <PriorityActionTerminal
-          alerts={filteredAlerts}
-          leadDay={selectedLead}
-        />
-      </div>
-
-      {/* Hydrologic Basin Dossier Cards */}
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Godavari Basin Card */}
-        <div className="p-5 rounded-2xl bg-[#0D1628] border border-white/10 space-y-2">
-          <div className="flex items-center justify-between">
-            <h4 className="font-heading font-bold text-white text-sm flex items-center gap-2">
-              <Waves className="w-4 h-4 text-[#00D9F5]" />
-              Godavari Fluvial System (27 Gauges)
-            </h4>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#00D9F5]/10 text-[#00D9F5] border border-[#00D9F5]/25">
-              312,812 km² Basin
-            </span>
-          </div>
-          <p className="text-xs text-[#91A2B8] leading-relaxed">
-            Spanning from the Western Ghats (Trimbakeshwar) through Maharashtra, Telangana, and Andhra Pradesh to Dowleswaram Barrage. Major tributaries monitored include Pravara, Indravati, Pranhita, and Manjra.
-          </p>
-        </div>
-
-        {/* Mahanadi Basin Card */}
-        <div className="p-5 rounded-2xl bg-[#0D1628] border border-white/10 space-y-2">
-          <div className="flex items-center justify-between">
-            <h4 className="font-heading font-bold text-white text-sm flex items-center gap-2">
-              <Waves className="w-4 h-4 text-[#13D6B0]" />
-              Mahanadi Fluvial System (19 Gauges)
-            </h4>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#13D6B0]/10 text-[#13D6B0] border border-[#13D6B0]/25">
-              141,600 km² Basin
-            </span>
-          </div>
-          <p className="text-xs text-[#91A2B8] leading-relaxed">
-            Originating in Chhattisgarh and flowing across Odisha into the Bay of Bengal. Monitored reaches include Hirakud Dam upstream inflows, Hasdeo, Ib, Seonath, and the Mundali/Cuttack delta head.
-          </p>
-        </div>
-      </div>
-    </div>
+        <ul className="pf-list">
+          {list.map((r) => (
+            <li key={r.gauge_id}>
+              <button type="button" className={r.gauge_id === selectedId ? 'is-on' : ''} onClick={() => setSelectedId(r.gauge_id)}>
+                <span className={`pf-dot is-${r.status}`} aria-hidden="true" />
+                <span className="pf-list-name">{r.name}<small>{r.river}</small></span>
+                <span className="pf-list-pct">{Math.round((r.predicted_m3s / r.q95_m3s) * 100)}%</span>
+              </button>
+            </li>
+          ))}
+          {rows && !list.length && <li className="pf-empty">{L('Nothing matches. Clear the search or choose another filter.', 'कुछ नहीं मिला। खोज हटाएँ या दूसरा फ़िल्टर चुनें।')}</li>}
+        </ul>
+      </aside>
+    </main>
   );
 };
+
+export default DashboardPage;

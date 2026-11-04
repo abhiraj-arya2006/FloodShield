@@ -1,19 +1,21 @@
 .lr {
-  --slate: #26373d;
-  --slate-deep: #1d2c31;
+  --slate: #0f2a3a;
+  --slate-deep: #0a1f2c;
   --silt: #b08a4e;
   --turmeric: #e8a917;
   --kumkum: #ef3a6e;
   --foam: #e6ece6;
   --foam-dim: #aebdb9;
+  position: relative;
   min-height: 100vh;
-  background: var(--slate);
+  background: radial-gradient(120% 90% at 78% 34%, #17415a 0%, var(--slate) 55%, var(--slate-deep) 100%);
   color: var(--foam);
   font-family: 'Anek Latin', system-ui, sans-serif;
   font-size: 1.0625rem;
   line-height: 1.45;
 }
 .lr a { color: inherit; }
+.lr h1, .lr h2 { font-family: Fraunces, Georgia, serif; font-variation-settings: 'opsz' 144, 'SOFT' 100; letter-spacing: -0.015em; }
 .lr :focus-visible { outline: 2px solid var(--foam); outline-offset: 3px; }
 
 .lr-top {
@@ -35,7 +37,6 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   margin: 0 0 0.75rem;
-  transition: font-variation-settings 0.25s ease-out;
 }
 .lr-intro p { color: var(--foam-dim); max-width: 29rem; margin: 0; }
 
@@ -56,7 +57,7 @@
   font-weight: 500;
   fill: var(--foam);
   paint-order: stroke;
-  stroke: var(--slate);
+  stroke: #0d2635;
   stroke-width: 4px;
   pointer-events: none;
 }
@@ -140,7 +141,7 @@
 
 /* The headline sits in the empty space left of the shorter Mahanadi. */
 @media (min-width: 1100px) {
-  .lr-intro { position: absolute; top: 0; left: clamp(1rem, 3vw, 2.5rem); max-width: 34vw; }
+  .lr-intro { position: absolute; top: 72px; left: clamp(1rem, 3vw, 2.5rem); max-width: 34vw; }
   .lr-scroll { margin-top: 0; }
 }
 @media (max-width: 700px) {
@@ -148,4 +149,33 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .lr-stop, .lr-intro h1 { transition: none; }
+}
+
+/* Water moving downstream along each river, and a slow ring on any gauge in warning. */
+.lr-flow {
+  fill: none;
+  stroke: rgba(255, 246, 224, 0.75);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-dasharray: 1.5 31;
+  animation: lr-flow 2.6s linear infinite;
+  pointer-events: none;
+}
+@keyframes lr-flow { to { stroke-dashoffset: -32.5; } }
+.lr-pulse {
+  fill: none;
+  stroke: var(--kumkum);
+  stroke-width: 2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lr-pulse 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes lr-pulse {
+  from { transform: scale(1); opacity: 0.85; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lr-flow, .lr-pulse { animation: none; }
+  .lr-pulse { opacity: 0; }
 }

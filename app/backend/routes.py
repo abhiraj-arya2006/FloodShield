@@ -1,13 +1,15 @@
 from datetime import datetime
 import re
 from typing import Optional
-from fastapi import APIRouter, Query, Path, HTTPException, Depends
+from fastapi import APIRouter, Query, Path, HTTPException, Depends, Request
+from fastapi.responses import StreamingResponse
 
 from app.backend.schemas import (
     HealthResponse, GaugesResponse, EdgesResponse, DatesResponse,
-    ForecastResponse, SingleGaugeForecastResponse, AlertsResponse, ModelInfoResponse
+    ForecastResponse, SingleGaugeForecastResponse, AlertsResponse, ModelInfoResponse, AskRequest
 )
 from app.backend.data_source import DataSource, get_data_source
+from app.backend import ask
 
 router = APIRouter(prefix="/api", tags=["FloodShield River Forecasting"])
 
@@ -50,7 +52,7 @@ def get_edges(source: DataSource = Depends(get_data_source)):
 
 @router.get("/dates", response_model=DatesResponse)
 def get_dates(source: DataSource = Depends(get_data_source)):
-    """Returns the list of available forecast dates in the validation archive (2009-2012)."""
+    """Returns the list of available forecast dates in the replay archive (2009-2018)."""
     return source.get_dates()
 
 
@@ -91,3 +93,17 @@ def get_alerts(
 def get_model_info(source: DataSource = Depends(get_data_source)):
     """Returns static model architecture, correction stage, training years, and dataset sources from config."""
     return source.get_model_info()
+
+
+@router.post("/ask")
+def ask_question(body: AskRequest, request: Request, source: DataSource = Depends(get_data_source)):
+    """Answers a question from the forecast on screen, with Claude if a key is set, otherwise built-in answers."""
+    start = validate_date_param(body.start)
+    if not ask.limiter.allow(request.client.host if request.client else "unknown"):
+        raise HTTPException(status_code=429, detail="Too many questions. Wait a minute, then ask again.")
+    forecast = ask.load_forecast(source, start)
+    if ask.claude_available():
+        answer, answered_by = ask.stream_claude(body, forecast, source), "claude"
+    else:
+        answer, answered_by = iter([ask.builtin_answer(body, forecast, source)]), "built-in"
+    return StreamingResponse(answer, media_type="text/plain; charset=utf-8", headers={"X-Answered-By": answered_by})

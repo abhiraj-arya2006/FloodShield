@@ -2,60 +2,101 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom';
 import { fetchDates, fetchEdges, fetchForecast, fetchGauges } from '../services/api';
 import { AlertStatus, EdgeItem, GaugeForecastRow, GaugeItem } from '../types';
+import { PlatformNav } from '../platform/PlatformNav';
+import { DEFAULT_START, forecastError, useForecastStore, useText } from '../platform/store';
 import './livingRiver.css';
 
 /* Both rivers are drawn to one scale: x is real river distance to the sea. */
-const VIEW_W = 1400;
-const VIEW_H = 580;
+export const VIEW_W = 1400;
+export const VIEW_H = 640;
 const SEA_X = 1330;
-const PX_PER_KM = 1.2;
-const LANE_H = 64;
-const TRUNK_Y: Record<string, number> = { Mahanadi: 185, Godavari: 450 };
-
-/* Tributary lanes relative to the main stem. Negative is above it. */
-const LANES: Record<string, number> = {
-  Godavari: 0, Mahanadi: 0,
-  Pravara: -1, Dudhna: -1, Wardha: -1, Pranhita: -1, Kanhan: -2, Wainganga: -2,
-  Manjira: 1, Indravati: 1, Sabari: 1,
-  Hasdeo: -1, Ib: -1, Mand: -2, Seonath: 1, Tel: 1,
-};
+/* Each basin keeps its own band of the diagram, so tributaries can't collide across rivers. */
+const BANDS: Record<string, [number, number]> = { Mahanadi: [34, 276], Godavari: [322, 604] };
+const MAX_LANE_H = 58;
 
 const COLORS: Record<AlertStatus, string> = { OK: '#B08A4E', WATCH: '#E8A917', WARNING: '#EF3A6E' };
-const STATUS_WORD: Record<AlertStatus, string> = { OK: 'Normal', WATCH: 'Watch', WARNING: 'Warning' };
 const DAYS = [1, 2, 3, 4];
 const LAST_DAY = 4;
-const DEFAULT_START = '2010-06-18'; // Rises gradually over the four days in the replay data.
 const SWEEP_MS = 6000;
 
 type DayRows = Record<number, Map<string, GaugeForecastRow>>;
-interface Point { gauge: GaugeItem; x: number; y: number; km: number; }
+export interface RiverPoint { gauge: GaugeItem; x: number; y: number; km: number; lane: number; }
 
 const addDays = (iso: string, n: number) => {
   const d = new Date(`${iso}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 };
-const prettyDate = (iso: string) =>
-  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
-function buildLayout(gauges: GaugeItem[], edges: EdgeItem[]): Map<string, Point> {
-  const next = new Map(edges.map((e) => [e.from_gauge_id, e]));
-  const kmToSea = (id: string): number => {
-    let km = 0;
-    let edge = next.get(id);
-    while (edge) {
-      km += edge.river_distance_km;
-      edge = next.get(edge.to_gauge_id);
-    }
-    return km;
+/*
+  Lays out any river tree. x is real river distance to the lowest gauge. The longest path
+  becomes the straight main stem, and each side branch takes the nearest free lane above or
+  below it, so branches of the same stretch of river never sit on top of each other.
+*/
+export function buildLayout(gauges: GaugeItem[], edges: EdgeItem[]): Map<string, RiverPoint> {
+  const down = new Map(edges.map((e) => [e.from_gauge_id, e]));
+  const ups = new Map<string, string[]>();
+  edges.forEach((e) => ups.set(e.to_gauge_id, [...(ups.get(e.to_gauge_id) ?? []), e.from_gauge_id]));
+
+  const kmOf = (id: string): number => {
+    const e = down.get(id);
+    return e ? e.river_distance_km + kmOf(e.to_gauge_id) : 0;
   };
-  return new Map(
-    gauges.map((gauge) => {
-      const km = kmToSea(gauge.gauge_id);
-      const lane = LANES[gauge.river] ?? 1;
-      return [gauge.gauge_id, { gauge, km, x: SEA_X - km * PX_PER_KM, y: TRUNK_Y[gauge.basin] + lane * LANE_H }];
-    })
-  );
+  const km = new Map(gauges.map((g) => [g.gauge_id, kmOf(g.gauge_id)]));
+  const tipKm = (id: string): number => Math.max(km.get(id) ?? 0, ...(ups.get(id) ?? []).map(tipKm));
+  const maxKm = Math.max(1, ...km.values());
+  const pxPerKm = (SEA_X - 60) / maxKm;
+
+  /* Follow the farthest-reaching upstream link from a gauge, up to its source. */
+  const stemFrom = (id: string): string[] => {
+    const next = [...(ups.get(id) ?? [])].sort((a, b) => tipKm(b) - tipKm(a))[0];
+    return next ? [id, ...stemFrom(next)] : [id];
+  };
+
+  const points = new Map<string, RiverPoint>();
+  for (const [basin, [top, bottom]] of Object.entries(BANDS)) {
+    const inBasin = gauges.filter((g) => g.basin === basin);
+    const outlet = inBasin.find((g) => !down.has(g.gauge_id));
+    if (!outlet) continue;
+    const lanes = new Map<string, number>();
+    const taken = new Map<number, [number, number][]>();
+    const queue: { from: string; junction: string; parentLane: number }[] = [];
+    const addStem = (stem: string[], lane: number) => {
+      stem.forEach((id) => lanes.set(id, lane));
+      stem.forEach((id) => {
+        (ups.get(id) ?? []).filter((u) => !stem.includes(u)).forEach((u) => queue.push({ from: u, junction: id, parentLane: lane }));
+      });
+    };
+    addStem(stemFrom(outlet.gauge_id), 0);
+    let nextSide = -1;
+    while (queue.length) {
+      queue.sort((a, b) => tipKm(b.from) - tipKm(a.from));
+      const { from, junction, parentLane } = queue.shift()!;
+      const stem = stemFrom(from);
+      const low = km.get(junction)! - 10;
+      const high = tipKm(from) + 26;
+      const side = parentLane ? Math.sign(parentLane) : nextSide;
+      if (!parentLane) nextSide = -nextSide;
+      const free = (lane: number) => !(taken.get(lane) ?? []).some(([a, b]) => low < b && high > a);
+      let lane = 0;
+      for (let step = Math.abs(parentLane) + 1; !lane; step++) {
+        if (free(side * step)) lane = side * step;
+        else if (!parentLane && free(-side * step)) lane = -side * step;
+      }
+      taken.set(lane, [...(taken.get(lane) ?? []), [low, high]]);
+      addStem(stem, lane);
+    }
+    const above = -Math.min(0, ...lanes.values());
+    const below = Math.max(0, ...lanes.values());
+    const laneH = Math.min(MAX_LANE_H, (bottom - top) / Math.max(1, above + below));
+    const trunkY = (top + bottom) / 2 + ((above - below) * laneH) / 2;
+    inBasin.forEach((gauge) => {
+      const id = gauge.gauge_id;
+      const lane = lanes.get(id) ?? 0;
+      points.set(id, { gauge, km: km.get(id)!, lane, x: SEA_X - km.get(id)! * pxPerKm, y: trunkY + lane * laneH });
+    });
+  }
+  return points;
 }
 
 /* Forecast flow between two whole days, used only to animate the drag. */
@@ -69,12 +110,12 @@ function flowAt(rows: DayRows, id: string, day: number): number | null {
 }
 
 const statusOf = (flow: number | null, g: GaugeItem): AlertStatus =>
-  flow == null || flow < g.q90_m3s ? 'OK' : flow < g.q95_m3s ? 'WATCH' : 'WARNING';
+  flow == null || flow < g.watch_m3s ? 'OK' : flow < g.warning_m3s ? 'WATCH' : 'WARNING';
 
 /* Larger rivers are wider; a river swells against its own high-flow level. */
 function halfWidth(flow: number | null, g: GaugeItem): number {
-  const ratio = Math.min(2.5, (flow ?? 0) / g.q95_m3s);
-  return ((2.5 + Math.sqrt(g.q95_m3s) / 7) * (0.3 + ratio)) / 2;
+  const ratio = Math.min(1.5, (flow ?? 0) / g.q95_m3s);
+  return ((2 + Math.sqrt(g.q95_m3s) / 9) * (0.3 + ratio)) / 2;
 }
 
 function ribbon(x1: number, y1: number, h1: number, x2: number, y2: number, h2: number): string {
@@ -82,7 +123,8 @@ function ribbon(x1: number, y1: number, h1: number, x2: number, y2: number, h2: 
   return `M${x1} ${y1 - h1}C${mx} ${y1 - h1} ${mx} ${y2 - h2} ${x2} ${y2 - h2}L${x2} ${y2 + h2}C${mx} ${y2 + h2} ${mx} ${y1 + h1} ${x1} ${y1 + h1}Z`;
 }
 
-export const LivingRiverPage: React.FC = () => {
+export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> = ({ hold = false, embedded = false }) => {
+  const { L, date, statusWord } = useText();
   const [gauges, setGauges] = useState<GaugeItem[]>([]);
   const [edges, setEdges] = useState<EdgeItem[]>([]);
   const [range, setRange] = useState<{ min: string; max: string } | null>(null);
@@ -122,8 +164,9 @@ export const LivingRiverPage: React.FC = () => {
         setEdges(e.edges);
         setRange({ min: addDays(d.min_date, -1), max: addDays(d.max_date, -LAST_DAY) });
       })
-      .catch(() => live && setError("The river network didn't load. Start the backend on port 8000, then try again."));
+      .catch(() => live && setError(L("The river network didn't load. Start the backend on port 8000, then try again.", 'नदी नेटवर्क लोड नहीं हुआ। पोर्ट 8000 पर बैकएंड चालू करें और फिर कोशिश करें।')));
     return () => { live = false; };
+    // eslint-disable-next-line
   }, [attempt]);
 
   /* `date` in the API is the day being forecast, so day k from a start date is (start + k) at lead k. */
@@ -138,11 +181,16 @@ export const LivingRiverPage: React.FC = () => {
         res.forEach((r, i) => { next[DAYS[i]] = new Map(r.gauges.map((row) => [row.gauge_id, row])); });
         setRows(next);
         setDay(1);
-        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) playSweep();
       })
-      .catch((err: Error) => live && setError(err.message || "This forecast didn't load. Choose another date."));
+      .catch((err: Error) => live && setError(forecastError(err)));
     return () => { live = false; };
   }, [start, attempt, playSweep, stopSweep]);
+
+  /* Play the four days once whenever a forecast is ready and on screen. */
+  useEffect(() => {
+    if (hold || !rows) return;
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) playSweep();
+  }, [hold, rows, playSweep]);
 
   const layout = useMemo(() => buildLayout(gauges, edges), [gauges, edges]);
   const points = useMemo(() => [...layout.values()], [layout]);
@@ -181,49 +229,45 @@ export const LivingRiverPage: React.FC = () => {
   );
   const warnings = flagged.filter((p) => live.get(p.gauge.gauge_id)!.status === 'WARNING').length;
   const wholeDay = Math.round(day);
+
+  /* Keep the Ask panel on the same forecast as this diagram. */
+  useEffect(() => {
+    useForecastStore.setState({ start, day: wholeDay });
+  }, [start, wholeDay]);
   const shownDate = addDays(start, wholeDay);
 
   const selected = selectedId ? layout.get(selectedId) : null;
   const selectedLive = selectedId ? live.get(selectedId) : null;
 
   const headline = warnings === 0
-    ? 'No gauges above high flow'
-    : `${warnings} ${warnings === 1 ? 'gauge' : 'gauges'} above high flow`;
+    ? L('No flood warnings', 'कोई बाढ़ चेतावनी नहीं')
+    : L(`${warnings} ${warnings === 1 ? 'gauge' : 'gauges'} on flood warning`, `${warnings} गेज पर बाढ़ चेतावनी`);
 
   return (
     <div className="lr">
-      <header className="lr-top">
-        <Link to="/" className="lr-brand">FloodShield</Link>
-        <nav aria-label="Main">
-          <Link to="/dashboard">Dashboard</Link>
-          <Link to="/alerts">Alerts</Link>
-          <Link to="/model-info">Model</Link>
-        </nav>
-      </header>
+      <PlatformNav embedded={embedded} />
 
       <main className="lr-stage">
         <div className="lr-intro">
-          {/* The headline itself widens as more gauges cross their high-flow level. */}
-          <h1 style={{ fontVariationSettings: `'wdth' ${Math.min(125, 78 + warnings * 4)}` }} aria-live="polite">{headline}</h1>
+          <h1 aria-live="polite">{headline}</h1>
           <p>
-            Day {wholeDay} of 4, {prettyDate(shownDate)}. Godavari and Mahanadi, drawn to scale by distance to the sea.
-            A river swells as its forecast flow nears that gauge's own high-flow level.
+            {L(`Day ${wholeDay} of 4, ${date(shownDate)}. The Godavari and Mahanadi, drawn to scale by river distance. A river swells as its forecast flow nears that gauge's own high-flow level.`, `दिन ${wholeDay}/4, ${date(shownDate)}। गोदावरी और महानदी, नदी की दूरी के पैमाने पर। जब पूर्वानुमानित प्रवाह गेज के उच्च प्रवाह स्तर के करीब आता है तो नदी फूलती है।`)}
           </p>
         </div>
 
         {error && (
           <div className="lr-error" role="alert">
             <p>{error}</p>
-            <button type="button" onClick={() => setAttempt((a) => a + 1)}>Try again</button>
+            <button type="button" onClick={() => setAttempt((a) => a + 1)}>{L('Try again', 'फिर से कोशिश करें')}</button>
           </div>
         )}
 
         <div className="lr-scroll">
-          <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="group" aria-label="River diagram of 46 gauges flowing toward the Bay of Bengal">
+          <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="group" aria-label={L('River diagram of 46 gauges flowing toward the Bay of Bengal', 'बंगाल की खाड़ी की ओर बहती नदियों के 46 गेज का आरेख')}>
             <defs>
               <linearGradient id="lr-sea" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stopColor="#3D5A5E" stopOpacity="0" />
-                <stop offset="1" stopColor="#3D5A5E" />
+                <stop offset="0" stopColor="#1f6a8c" stopOpacity="0" />
+                <stop offset="1" stopColor="#1f6a8c" />
               </linearGradient>
               {edges.map((e) => {
                 const a = layout.get(e.from_gauge_id);
@@ -239,12 +283,12 @@ export const LivingRiverPage: React.FC = () => {
             </defs>
 
             <rect x={SEA_X - 24} y="0" width={VIEW_W - SEA_X + 24} height={VIEW_H} fill="url(#lr-sea)" />
-            <text className="lr-sea-name" transform={`translate(${VIEW_W - 24} ${VIEW_H / 2}) rotate(90)`} textAnchor="middle">Bay of Bengal</text>
+            <text className="lr-sea-name" transform={`translate(${VIEW_W - 24} ${VIEW_H / 2}) rotate(90)`} textAnchor="middle">{L('Bay of Bengal', 'बंगाल की खाड़ी')}</text>
 
-            <text className="lr-script" x={SEA_X - 20} y="82" textAnchor="end" lang="or">ମହାନଦୀ</text>
-            <text className="lr-script" x="52" y="566" lang="te">గోదావరి</text>
-            <text className="lr-river-name" x={SEA_X - 22} y="108" textAnchor="end">Mahanadi</text>
-            <text className="lr-river-name" x="56" y="500">Godavari</text>
+            <text className="lr-script" x={SEA_X - 20} y="268" textAnchor="end" lang="or">ମହାନଦୀ</text>
+            <text className="lr-script" x="52" y="626" lang="te">గోదావరి</text>
+            <text className="lr-river-name" x={SEA_X - 22} y="208" textAnchor="end">{L('Mahanadi', 'महानदी')}</text>
+            <text className="lr-river-name" x="56" y="556">{L('Godavari', 'गोदावरी')}</text>
 
             {edges.map((e) => {
               const a = layout.get(e.from_gauge_id);
@@ -252,17 +296,23 @@ export const LivingRiverPage: React.FC = () => {
               if (!a || !b) return null;
               const h1 = live.get(e.from_gauge_id)?.h ?? 1;
               const h2 = live.get(e.to_gauge_id)?.h ?? 1;
-              return <path key={e.from_gauge_id} d={ribbon(a.x, a.y, h1, b.x, b.y, h2)} fill={`url(#lr-e${e.from_gauge_id})`} />;
+              const mx = (a.x + b.x) / 2;
+              return (
+                <g key={e.from_gauge_id}>
+                  <path d={ribbon(a.x, a.y, h1, b.x, b.y, h2)} fill={`url(#lr-e${e.from_gauge_id})`} />
+                  <path className="lr-flow" d={`M${a.x} ${a.y}C${mx} ${a.y} ${mx} ${b.y} ${b.x} ${b.y}`} />
+                </g>
+              );
             })}
 
-            {points.map(({ gauge, x, y }) => {
+            {points.map(({ gauge, x, y, lane }) => {
               const id = gauge.gauge_id;
               const state = live.get(id);
               const status = state?.status ?? 'OK';
               const isSelected = id === selectedId;
               const showName = status !== 'OK' || isSelected;
               const ratio = state?.flow != null ? state.flow / gauge.q95_m3s : 0;
-              const above = (LANES[gauge.river] ?? 1) <= 0;
+              const above = lane <= 0;
               const lift = (labelRow.get(id) ?? 0) * 18;
               const labelY = above ? y - (state?.h ?? 0) - 9 - lift : y + (state?.h ?? 0) + 19 + lift;
               return (
@@ -271,19 +321,20 @@ export const LivingRiverPage: React.FC = () => {
                   className="lr-gauge"
                   role="button"
                   tabIndex={0}
-                  aria-label={`${gauge.name}, ${gauge.river}: ${STATUS_WORD[status]}`}
+                  aria-label={`${gauge.name}, ${gauge.river}: ${statusWord(status)}`}
                   aria-pressed={isSelected}
                   onMouseEnter={() => setSelectedId(id)}
                   onFocus={() => setSelectedId(id)}
                   onClick={() => setSelectedId(id)}
                 >
                   <circle cx={x} cy={y} r="15" fill="transparent" />
+                  {status === 'WARNING' && <circle className="lr-pulse" cx={x} cy={y} r={Math.max(3.5, (state?.h ?? 0) + 1.5)} />}
                   <circle
                     className="lr-ring"
                     cx={x}
                     cy={y}
                     r={Math.max(3.5, (state?.h ?? 0) + 1.5)}
-                    fill={status === 'WARNING' ? COLORS.WARNING : '#26373D'}
+                    fill={status === 'WARNING' ? COLORS.WARNING : '#0F2A3A'}
                     stroke={isSelected ? '#E6ECE6' : status === 'WARNING' ? '#E6ECE6' : COLORS[status]}
                     strokeWidth={isSelected ? 2.5 : 1.5}
                   />
@@ -307,7 +358,7 @@ export const LivingRiverPage: React.FC = () => {
 
         <div className="lr-controls">
           <div className="lr-scrub">
-            <label htmlFor="lr-day">Forecast day</label>
+            <label htmlFor="lr-day">{L('Forecast day', 'पूर्वानुमान का दिन')}</label>
             <input
               id="lr-day"
               type="range"
@@ -316,7 +367,7 @@ export const LivingRiverPage: React.FC = () => {
               step={0.01}
               value={day}
               disabled={!rows}
-              aria-valuetext={`Day ${wholeDay}, ${prettyDate(shownDate)}, ${warnings} gauges above high flow`}
+              aria-valuetext={`${wholeDay}, ${date(shownDate)}, ${headline}`}
               onPointerDown={stopSweep}
               onKeyDown={stopSweep}
               onChange={(e) => setDay(Number(e.target.value))}
@@ -326,15 +377,15 @@ export const LivingRiverPage: React.FC = () => {
             <div className="lr-ticks" aria-hidden="true">
               {DAYS.map((k) => (
                 <button key={k} type="button" tabIndex={-1} className={k === wholeDay ? 'is-on' : ''} onClick={() => { stopSweep(); setDay(k); }}>
-                  Day {k}
+                  {L(`Day ${k}`, `दिन ${k}`)}
                 </button>
               ))}
             </div>
           </div>
           <div className="lr-actions">
-            <button type="button" onClick={() => { setDay(1); playSweep(); }} disabled={!rows}>Play four days</button>
+            <button type="button" onClick={() => { setDay(1); playSweep(); }} disabled={!rows}>{L('Play four days', 'चार दिन चलाएँ')}</button>
             <label>
-              Forecast made on
+              {L('Forecast made on', 'पूर्वानुमान की तारीख')}
               <input
                 type="date"
                 value={start}
@@ -352,26 +403,26 @@ export const LivingRiverPage: React.FC = () => {
               <>
                 <h2>{selected.gauge.name}</h2>
                 <p>
-                  {selected.gauge.river} river, {Math.round(selected.km)} km to the sea. {STATUS_WORD[selectedLive.status]} on day {wholeDay}.
+                  {L(`${selected.gauge.river} river. ${selected.km ? `${Math.round(selected.km)} km above the last gauge.` : 'The last gauge on this river.'} ${statusWord(selectedLive.status)} on day ${wholeDay}.`, `${selected.gauge.river} नदी। ${selected.km ? `आखिरी गेज से ${Math.round(selected.km)} किमी ऊपर।` : 'इस नदी का आखिरी गेज।'} दिन ${wholeDay}: ${statusWord(selectedLive.status)}।`)}
                 </p>
                 <p className="lr-figure">
                   {selectedLive.flow != null
-                    ? `${Math.round(selectedLive.flow).toLocaleString('en-IN')} m³/s forecast, ${Math.round((selectedLive.flow / selected.gauge.q95_m3s) * 100)}% of its high-flow level`
-                    : 'No forecast for this gauge on this day'}
+                    ? L(`${Math.round(selectedLive.flow).toLocaleString('en-IN')} m³/s forecast, ${Math.round((selectedLive.flow / selected.gauge.q95_m3s) * 100)}% of its high-flow level`, `${Math.round(selectedLive.flow).toLocaleString('en-IN')} m³/s पूर्वानुमान, उच्च प्रवाह स्तर का ${Math.round((selectedLive.flow / selected.gauge.q95_m3s) * 100)}%`)
+                    : L('No forecast for this gauge on this day', 'इस दिन इस गेज का पूर्वानुमान नहीं है')}
                 </p>
-                <Link to={`/gauge/${selected.gauge.gauge_id}`}>Open gauge forecast</Link>
+                <Link to={`/gauge/${selected.gauge.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
               </>
             ) : (
-              <p>Point at a gauge on the river to read its forecast.</p>
+              <p>{L('Point at a gauge on the river to read its forecast.', 'पूर्वानुमान पढ़ने के लिए नदी पर किसी गेज पर जाएँ।')}</p>
             )}
           </section>
           <section className="lr-flagged">
-            <h2>{flagged.length ? `Flagged on day ${wholeDay}` : `Nothing flagged on day ${wholeDay}`}</h2>
+            <h2>{flagged.length ? L(`Flagged on day ${wholeDay}`, `दिन ${wholeDay} पर चिह्नित`) : L(`Nothing flagged on day ${wholeDay}`, `दिन ${wholeDay} पर कुछ चिह्नित नहीं`)}</h2>
             <ul>
               {flagged.map(({ gauge }) => (
                 <li key={gauge.gauge_id}>
                   <button type="button" data-status={live.get(gauge.gauge_id)!.status} onClick={() => setSelectedId(gauge.gauge_id)}>
-                    {gauge.name} <span>{STATUS_WORD[live.get(gauge.gauge_id)!.status]}</span>
+                    {gauge.name} <span>{statusWord(live.get(gauge.gauge_id)!.status)}</span>
                   </button>
                 </li>
               ))}
@@ -381,8 +432,7 @@ export const LivingRiverPage: React.FC = () => {
       </main>
 
       <footer className="lr-note">
-        Simulated demo data, not STG-Mamba output. FloodShield is a research prototype, not an official flood warning.
-        High flow means above a gauge's own 95th-percentile flow, not a danger level.
+        {L("STG-Mamba replay using recorded rain, not a live forecast. Research prototype, not an official flood warning. High flow means above a gauge's own 95th-percentile flow, and warnings start 10% below it. Earth imagery: NASA.", 'दर्ज बारिश के साथ STG-Mamba रीप्ले, लाइव पूर्वानुमान नहीं। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं। उच्च प्रवाह का अर्थ गेज का अपना 95वाँ प्रतिशतक है, और चेतावनी उससे 10% नीचे शुरू होती है। पृथ्वी की छवि: NASA।')}
       </footer>
     </div>
   );

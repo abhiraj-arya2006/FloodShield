@@ -1,0 +1,150 @@
+.ld { background: #0f2a3a; }
+.ld-track { height: 620vh; }
+.ld-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow: hidden;
+  color: #f4f8f6;
+  background: linear-gradient(#0f5a7c, #06223c);
+  font-family: 'Anek Latin', system-ui, sans-serif;
+}
+.ld-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ld :focus-visible { outline: 2px solid #f4f8f6; outline-offset: 3px; }
+
+.ld-top {
+  position: absolute;
+  z-index: 3;
+  inset: 0 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 1.25rem clamp(1rem, 3vw, 2.5rem);
+}
+.ld-brand { font-size: 1.25rem; font-weight: 600; font-variation-settings: 'wdth' 118; text-shadow: 0 1px 12px rgba(4, 22, 40, 0.6); }
+.ld-top button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 1.0625rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-shadow: 0 1px 12px rgba(4, 22, 40, 0.6);
+}
+
+.ld-slide {
+  position: absolute;
+  z-index: 2;
+  opacity: 0;
+  will-change: opacity, transform;
+  text-shadow: 0 2px 24px rgba(4, 22, 40, 0.55);
+}
+.ld-slide h1,
+.ld-slide h2 {
+  font-family: Fraunces, Georgia, serif;
+  margin: 0 0 0.9rem;
+  font-weight: 500;
+  font-variation-settings: 'opsz' 144, 'SOFT' 100;
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+}
+.ld-s1 h1 { text-shadow: 0 2px 6px rgba(4, 22, 40, 0.5), 0 6px 44px rgba(4, 22, 40, 0.75); }
+.ld-s1 p { font-weight: 500; text-shadow: 0 1px 4px rgba(4, 22, 40, 0.8), 0 2px 18px rgba(4, 22, 40, 0.8); }
+.ld-slide h1 { font-size: clamp(2.75rem, 6.4vw, 6.5rem); }
+.ld-slide h2 { font-size: clamp(2.25rem, 4.2vw, 4.25rem); }
+.ld-slide p { margin: 0; font-size: clamp(1.0625rem, 1.35vw, 1.3rem); line-height: 1.45; font-weight: 400; }
+
+.ld-s1 { inset: 50% 0 auto; translate: 0 -50%; text-align: center; padding: 0 clamp(1.5rem, 13vw, 16rem); }
+.ld-s1 p { max-width: 34rem; margin-inline: auto; }
+.ld-s2 { left: clamp(1.25rem, 6vw, 6rem); bottom: 12vh; max-width: min(40rem, 86vw); }
+.ld-s2 p { max-width: 32rem; }
+.ld-s3 { left: clamp(1.25rem, 6vw, 6rem); top: 28vh; max-width: min(30rem, 86vw); }
+.ld-s4 { left: clamp(1rem, 3vw, 2.5rem); top: 11vh; max-width: min(34vw, 30rem); text-shadow: none; }
+.ld-s4 h2 { font-size: clamp(1.9rem, 3.1vw, 3.25rem); }
+.ld-s4 p { color: #c8d5d1; font-size: 1.0625rem; }
+
+.ld-enter {
+  margin-top: 1.1rem;
+  background: #f4f8f6;
+  color: #1d2c31;
+  border: 0;
+  border-radius: 3px;
+  padding: 0.7rem 1.25rem;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ld-steps {
+  position: absolute;
+  z-index: 3;
+  right: clamp(0.5rem, 1.5vw, 1.25rem);
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+}
+.ld-steps button {
+  width: 28px;
+  height: 36px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  position: relative;
+}
+.ld-steps button::after {
+  content: '';
+  position: absolute;
+  inset: 8px 13px;
+  background: rgba(244, 248, 246, 0.65);
+  border-radius: 1px;
+}
+.ld-steps button:hover::after { background: #f4f8f6; }
+
+.ld-hint {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 1.5rem;
+  translate: -50% 0;
+  text-align: center;
+  font-size: 0.975rem;
+  text-shadow: 0 1px 12px rgba(4, 22, 40, 0.8);
+}
+.ld-hint span {
+  display: block;
+  width: 1px;
+  height: 30px;
+  margin: 0.4rem auto 0;
+  background: #f4f8f6;
+  transform-origin: top;
+  animation: ld-drip 2.2s ease-in-out infinite;
+}
+@keyframes ld-drip {
+  0% { transform: scaleY(0); opacity: 1; }
+  70% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
+
+@media (max-width: 800px) {
+  .ld-s3 { top: 13vh; }
+  .ld-s4 { max-width: 86vw; top: 10vh; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-hint span { animation: none; }
+}
+
+.ld-slide h1, .ld-slide h2, .ld-slide p { text-wrap: balance; }
+.ld-word { display: inline-block; white-space: pre; will-change: transform, filter; }
+.ld-steps button[aria-current='step']::after { background: #ffd98a; inset: 4px 12px; }
+.ld-hint {
+  padding: 0.45rem 1.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(5, 24, 42, 0.5);
+  backdrop-filter: blur(8px);
+  font-weight: 500;
+}
+.ld-hint span { display: none; }

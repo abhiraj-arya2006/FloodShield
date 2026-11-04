@@ -9,6 +9,8 @@ export interface GaugeItem {
   ghi_lon: number;
   q90_m3s: number;
   q95_m3s: number;
+  watch_m3s: number;
+  warning_m3s: number;
 }
 
 export interface GaugesResponse {
@@ -47,6 +49,8 @@ export interface GaugeForecastRow {
   predicted_m3s: number;
   q90_m3s: number;
   q95_m3s: number;
+  watch_m3s: number;
+  warning_m3s: number;
   status: AlertStatus;
   observed_m3s: number | null;
   mask: boolean;
@@ -95,13 +99,14 @@ export interface AlertItem {
   ghi_lat: number;
   ghi_lon: number;
   lead_day: number;
-  approx_hours: string;
   status: 'WATCH' | 'WARNING';
   predicted_m3s: number;
   threshold_m3s: number;
   q90_m3s: number;
   q95_m3s: number;
   exceedance_pct: number;
+  observed_m3s: number | null;
+  flood_day: boolean | null;
   drafted_message: string;
 }
 
@@ -139,6 +144,8 @@ export interface HealthResponse {
   status: string;
   mode: string;
   data_period: string;
+  predictions: string;
+  alert_margin: number;
   total_gauges: number;
   timestamp: string;
 }

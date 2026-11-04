@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()  # Reads ANTHROPIC_API_KEY from .env when it exists.
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

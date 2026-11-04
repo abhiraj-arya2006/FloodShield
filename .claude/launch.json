@@ -1,3 +1,39 @@
-{"version":"0.0.1","configurations":[
-{"name":"backend","runtimeExecutable":"python","runtimeArgs":["-m","uvicorn","app.backend.main:app","--host","127.0.0.1","--port","8000"],"port":8000},
-{"name":"frontend","runtimeExecutable":"npm","runtimeArgs":["--prefix","app/frontend","run","dev"],"port":5173}]}
+{
+ "version": "0.0.1",
+ "configurations": [
+  {
+   "name": "backend",
+   "runtimeExecutable": "python",
+   "runtimeArgs": [
+    "-m",
+    "uvicorn",
+    "app.backend.main:app",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "8000"
+   ],
+   "port": 8000
+  },
+  {
+   "name": "frontend",
+   "runtimeExecutable": "npm",
+   "runtimeArgs": [
+    "--prefix",
+    "app/frontend",
+    "run",
+    "dev"
+   ],
+   "port": 5173
+  },
+  {
+   "name": "frontend-verify",
+   "runtimeExecutable": "cmd",
+   "runtimeArgs": [
+    "/c",
+    "set FLOODSHIELD_API=http://127.0.0.1:8001&& npm --prefix app/frontend run dev -- --port 5180 --strictPort"
+   ],
+   "port": 5180
+  }
+ ]
+}

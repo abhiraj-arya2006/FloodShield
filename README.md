@@ -25,33 +25,40 @@ This repository holds **Phase 2**: a spatio-temporal graph + Mamba (STG-Mamba) s
   - **Lead Day 1:** Nowcast
   - **Lead Days 2, 3, 4:** Headline forecasts
 - **Threshold Rules:**
-  - `WARNING`: Predicted flow $\ge q95 \times (1 + \text{alert\_margin})$
-  - `WATCH`: Predicted flow $\ge q90 \times (1 + \text{alert\_margin})$ and $< q95 \times (1 + \text{alert\_margin})$
+  - `WARNING`: forecast flow >= q95 x (1 - alert_margin), with alert_margin = 0.10
+  - `WATCH`: forecast flow >= q90 x (1 - alert_margin), below the warning level
   - Configurable via `configs/river_alert_policy.yaml` and `configs/flow_thresholds.csv`.
 
 ---
 
 ## Datasets & Lineage
 
-| Dataset | Role | Attribution / Citation |
+| Dataset | Role | Citation |
 |---|---|---|
-| [CAMELS-IND](https://doi.org/10.5281/zenodo.14005378) | Daily streamflow observations (India-WRIS), gauge coordinates, static catchment attributes | doi:10.5281/zenodo.14005378 |
-| [HydroRIVERS](https://www.hydrosheds.org/products/hydrorivers) | Upstream/downstream topological river network edges | HydroSHEDS / WWF |
-| [Open-Meteo Historical Weather (Archive)](https://open-meteo.com/en/docs/historical-weather-api) | Historical reanalysis meteorological forcings (ERA5) | Open-Meteo.com (CC BY 4.0) |
-| [Open-Meteo Forecast API](https://open-meteo.com/en/docs) | Numerical weather prediction forcings for live forecasts | Open-Meteo.com (CC BY 4.0) |
+| [CAMELS-IND v2.2](https://doi.org/10.5281/zenodo.14999580) | Daily streamflow, catchment-mean weather forcings (IMD, IMDAA, GLEAM), gauge locations, catchment attributes | doi:10.5281/zenodo.14999580 |
+| [HydroRIVERS](https://www.hydrosheds.org/products/hydrorivers) | River network linking gauges upstream to downstream | HydroSHEDS / WWF |
+| NASA Blue Marble | Earth imagery on the site | NASA Visible Earth |
 
 ---
 
-## Data Generation & Git-Ignored Artifacts
+## Loading the Model's Forecasts
 
-To prevent committing large binary datasets into git, the 2009–2012 validation replay dataset is generated locally:
+The app serves the saved forecasts of the trained STG-Mamba ensemble (`ens_perlead_hf5`): validation years 2009-2012 and held-back test years 2013-2018. Forecasts and weights are large, so they aren't in git.
 
 ```bash
-# Generates app/backend/data/replay_predictions.parquet, gauges.json, edges.json, configs
-python scripts/generate_river_data.py
+# --bundle holds outputs/ and checkpoints/ from training; --model-repo is a checkout of the model repository
+python scripts/import_model_predictions.py --bundle <folder> --model-repo <folder>
 ```
 
-*Note: `app/backend/data/*.parquet` is excluded from git in `.gitignore`.*
+This writes the forecasts plus the real gauges, river links and thresholds. It refuses to write anything unless the forecasts reproduce `metrics/final_test_results.csv` exactly.
+
+These are replays using recorded rain for the four forecast days. Live forecasting (IMD observations plus forecast rain) is not built, and its skill will be lower.
+
+---
+
+## Ask Panel
+
+The Ask button answers questions from the forecast on screen. Common questions get built-in answers worked out from the data, with no API key. For open-ended questions, copy `.env.example` to `.env`, set `ANTHROPIC_API_KEY`, and restart the backend. Each answer says which of the two produced it. The key stays on the server, and questions are limited to 20 a minute per client.
 
 ---
 
@@ -114,7 +121,7 @@ The system uses a pluggable `DataSource` interface (`ReplaySource` vs `LiveSourc
 
 ## What Is Still Not Built
 
-1. **Live Weather Ingestion Pipeline**: Real-time periodic pulling from Open-Meteo Forecast API (`app/backend/scheduler.py`).
+1. **Live Weather Ingestion Pipeline**: Periodic IMD observations plus forecast rain, as planned in the model repository's live demo notes (`app/backend/scheduler.py`).
 2. **Phase 3 XGBoost Residual Correction Stage**: Secondary tabular stage correcting STG-Mamba peak errors.
 3. **Automated CAP/SMS Dispatch Gateway**: Actual transmission to district disaster authorities (currently strictly simulated for research integrity).
 4. **Full Multi-Language Devanagari Translation strings**: The i18n infrastructure (`EN | HI`) and font loading are active; comprehensive dictionary expansion for regional Indian dialects (Telugu, Odia, Marathi) is planned.
