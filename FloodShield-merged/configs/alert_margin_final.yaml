@@ -1,0 +1,140 @@
+alert_margin: 0.1
+selection: Set manually by the user on 2026-11-04. This overrides the selection rule; 0.10 does not meet its hit-rate
+  target of 0.90.
+definition: alert if forecast_m3s >= q95 * (1 - alert_margin); dimensionless fraction of the gauge's training-year
+  q95 (configs/flow_thresholds.csv). One value for all gauges and leads.
+flood_day: observed_m3s > q95
+chosen_on: '2026-11-04'
+forecasts:
+  run: ens_perlead_hf5
+  members:
+  - stg_mamba_perlead_hf5
+  - stg_mamba_perlead_hf5_s1
+  - stg_mamba_perlead_hf5_s2
+  xgboost_correction: false
+validation_period:
+- '2009-01-01'
+- '2012-12-31'
+sweep:
+  margins: 0.0 to 0.99 in steps of 0.005
+  file: metrics/alert_margin_sweep_val.csv
+validation_results:
+  all_46:
+    2:
+      hit_rate: 0.7955
+      false_alarm_share: 0.3926
+      accuracy: 0.9643
+      flood_days: 3125
+      hits: 2486
+      false_alarms: 1607
+      scored_days: 62870
+    3:
+      hit_rate: 0.8026
+      false_alarm_share: 0.3981
+      accuracy: 0.9638
+      flood_days: 3125
+      hits: 2508
+      false_alarms: 1659
+      scored_days: 62874
+    4:
+      hit_rate: 0.7946
+      false_alarm_share: 0.3938
+      accuracy: 0.9641
+      flood_days: 3125
+      hits: 2483
+      false_alarms: 1613
+      scored_days: 62878
+  excl_5_41:
+    excluded: &id001
+    - '03030'
+    - '03056'
+    - 08029
+    - 03109
+    - 08020
+    2:
+      hit_rate: 0.8056
+      false_alarm_share: 0.392
+      accuracy: 0.965
+      flood_days: 2798
+      hits: 2254
+      false_alarms: 1453
+      scored_days: 57116
+    3:
+      hit_rate: 0.8124
+      false_alarm_share: 0.3972
+      accuracy: 0.9646
+      flood_days: 2798
+      hits: 2273
+      false_alarms: 1498
+      scored_days: 57119
+    4:
+      hit_rate: 0.8045
+      false_alarm_share: 0.3928
+      accuracy: 0.9649
+      flood_days: 2798
+      hits: 2251
+      false_alarms: 1456
+      scored_days: 57122
+rule_result_not_in_use:
+  alert_margin: 0.34
+  chosen_on: '2026-11-04'
+  rule: 'Smallest single margin with pooled hit rate >= 0.90 and false-alarm share <= 0.60 at every one of leads
+    2, 3 and 4 on all 46 gauges. If none, the margin with false-alarm share <= 0.50 at every lead and the highest
+    hit rate at its worst lead (ties: smallest margin), and 0.90 is reported as not reachable.'
+  rule_branch: primary
+  validation_results:
+    all_46:
+      2:
+        hit_rate: 0.9005
+        false_alarm_share: 0.508
+        accuracy: 0.9488
+        flood_days: 3125
+        hits: 2814
+        false_alarms: 2906
+        scored_days: 62870
+      3:
+        hit_rate: 0.9034
+        false_alarm_share: 0.5116
+        accuracy: 0.9482
+        flood_days: 3125
+        hits: 2823
+        false_alarms: 2957
+        scored_days: 62874
+      4:
+        hit_rate: 0.9005
+        false_alarm_share: 0.5096
+        accuracy: 0.9486
+        flood_days: 3125
+        hits: 2814
+        false_alarms: 2924
+        scored_days: 62878
+    excl_5_41:
+      excluded: *id001
+      2:
+        hit_rate: 0.9139
+        false_alarm_share: 0.5092
+        accuracy: 0.9493
+        flood_days: 2798
+        hits: 2557
+        false_alarms: 2653
+        scored_days: 57116
+      3:
+        hit_rate: 0.916
+        false_alarm_share: 0.5131
+        accuracy: 0.9486
+        flood_days: 2798
+        hits: 2563
+        false_alarms: 2701
+        scored_days: 57119
+      4:
+        hit_rate: 0.9117
+        false_alarm_share: 0.5118
+        accuracy: 0.9489
+        flood_days: 2798
+        hits: 2551
+        false_alarms: 2674
+        scored_days: 57122
+notes:
+- Pooled over gauges and scored on days with observed flow.
+- 'future_rain mode observed: validation uses real IMD rain, so scores are optimistic.'
+- Not read by any code yet; configs/training.yaml warning.alert_margin is unchanged.

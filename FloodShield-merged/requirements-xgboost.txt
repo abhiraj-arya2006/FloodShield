@@ -1,0 +1,4 @@
+# Phase 3 XGBoost residual correction only (scripts/train_xgb_residual.py).
+# Install on top of requirements.txt: python -m pip install -r requirements-xgboost.txt
+# On macOS XGBoost also needs libomp; see the header of the script.
+xgboost==3.2.0
