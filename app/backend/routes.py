@@ -10,6 +10,7 @@ from app.backend.schemas import (
 )
 from app.backend.data_source import DataSource, get_data_source
 from app.backend import ask
+from app.backend.live import LiveUnavailable, forecaster as live_forecaster
 
 router = APIRouter(prefix="/api", tags=["FloodShield River Forecasting"])
 
@@ -107,3 +108,13 @@ def ask_question(body: AskRequest, request: Request, source: DataSource = Depend
     else:
         answer, answered_by = iter([ask.builtin_answer(body, forecast, source)]), "built-in"
     return StreamingResponse(answer, media_type="text/plain; charset=utf-8", headers={"X-Answered-By": answered_by})
+
+
+@router.get("/live")
+def get_live_forecast():
+    """Runs STG-Mamba on current weather if needed, and says which forecast is current."""
+    try:
+        forecast = live_forecaster.current()
+    except LiveUnavailable as error:
+        raise HTTPException(status_code=503, detail=str(error))
+    return {key: forecast[key] for key in ("made_on", "generated_at", "stale", "weather")}

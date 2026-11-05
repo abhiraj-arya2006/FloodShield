@@ -390,3 +390,73 @@
 }
 
 .pf .pf-ask-open { color: var(--pf-ink); }
+
+/* Live or past years */
+.pf-mode { display: flex; gap: 0.15rem; padding: 0.2rem; border-radius: 999px; background: rgba(255, 255, 255, 0.07); }
+.pf .pf-mode button, .pf-mode button { display: inline-flex; align-items: center; gap: 0.4rem; min-height: 30px; padding: 0 0.7rem; border: 0; border-radius: 999px; background: none; color: var(--pf-mist); font: inherit; font-size: 0.925rem; cursor: pointer; transition: background 0.2s, color 0.2s; }
+.pf .pf-mode button.is-on, .pf-mode button.is-on { background: rgba(255, 255, 255, 0.14); color: var(--pf-foam); font-weight: 600; }
+.pf-mode button:disabled { opacity: 0.45; cursor: default; }
+.pf-mode i { width: 8px; height: 8px; border-radius: 50%; background: var(--pf-mist); }
+.pf-mode .is-on i { background: var(--pf-aqua); animation: pf-live 2s ease-out infinite; }
+@keyframes pf-live { from { box-shadow: 0 0 0 0 rgba(111, 240, 224, 0.7); } to { box-shadow: 0 0 0 9px rgba(111, 240, 224, 0); } }
+.pf-updated, .lr-updated { margin: 0; font-size: 0.925rem; color: var(--pf-foam); text-shadow: 0 1px 8px rgba(6, 25, 42, 0.9); }
+.pf-updated b { display: block; font-weight: 600; }
+.lr-updated { max-width: 15rem; color: var(--foam-dim); }
+.pf-reading { margin: 0; padding: 0.5rem 0.9rem; width: fit-content; border-radius: 16px; background: var(--pf-glass); backdrop-filter: blur(14px); font-size: 0.975rem; }
+
+/* Map helpers */
+.pf-map-tools { position: absolute; z-index: 2; left: calc(clamp(1rem, 2.2vw, 2rem) + 385px); bottom: 1.25rem; display: grid; border-radius: 16px; border: 1px solid var(--pf-line); background: var(--pf-glass); backdrop-filter: blur(14px); overflow: hidden; }
+.pf-map-tools button { display: grid; place-items: center; width: 40px; height: 40px; border: 0; background: none; cursor: pointer; transition: background 0.2s; }
+.pf-map-tools button + button { border-top: 1px solid var(--pf-line); }
+.pf-map-tools button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+.pf-map-tools button:disabled { opacity: 0.35; cursor: default; }
+.pf-legend-map { position: absolute; z-index: 2; left: calc(clamp(1rem, 2.2vw, 2rem) + 440px); bottom: 1.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.95rem; padding: 0.5rem 0.95rem; border-radius: 999px; background: var(--pf-glass); backdrop-filter: blur(14px); font-size: 0.925rem; }
+.pf-legend-map span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.pf-legend-map .pf-dot { display: block; }
+.pf-legend-line i { display: block; width: 22px; height: 7px; border-radius: 6px; background: linear-gradient(90deg, var(--pf-gold), var(--pf-gold)); clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%); }
+.pf-detail-head { align-items: center; }
+.pf-detail-head h2 { flex: 1; min-width: 0; }
+.pf .pf-detail-close { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.08); color: var(--pf-mist); cursor: pointer; }
+.pf .pf-detail-close:hover { background: rgba(255, 255, 255, 0.16); color: var(--pf-foam); }
+.pf-days span:last-child { white-space: nowrap; }
+
+/* Quiet loading state */
+.pf-shimmer { height: 52px; margin-bottom: 0.45rem; border-radius: 14px; background: linear-gradient(100deg, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0.13) 50%, rgba(255, 255, 255, 0.05) 70%); background-size: 220% 100%; animation: pf-shimmer 1.5s linear infinite; list-style: none; }
+.pf-shimmer.is-tall { height: 86px; margin: 0; border-radius: 22px; }
+@keyframes pf-shimmer { to { background-position: -220% 0; } }
+
+/* Page change: the new page rises over the old one like water, with a wavy leading edge. The nav stays put. */
+.pf-nav { view-transition-name: pf-nav; }
+::view-transition-group(pf-nav) { animation: none; z-index: 5; }
+::view-transition-old(pf-nav), ::view-transition-new(pf-nav) { animation: none; }
+::view-transition-old(root) { animation: pf-tide-under 0.85s ease both; }
+::view-transition-new(root) { animation: pf-tide-rise 0.85s cubic-bezier(0.65, 0, 0.2, 1) both; }
+@keyframes pf-tide-under { to { filter: brightness(0.55) blur(3px); transform: translateY(-3%); } }
+@keyframes pf-tide-rise {
+  from { clip-path: polygon(0% 106%, 10% 103%, 20% 106%, 30% 109%, 40% 106%, 50% 103%, 60% 106%, 70% 109%, 80% 106%, 90% 103%, 100% 106%, 100% 120%, 0% 120%); }
+  55% { clip-path: polygon(0% 44%, 10% 39%, 20% 44%, 30% 49%, 40% 44%, 50% 39%, 60% 44%, 70% 49%, 80% 44%, 90% 39%, 100% 44%, 100% 120%, 0% 120%); }
+  to { clip-path: polygon(0% -8%, 10% -11%, 20% -8%, 30% -5%, 40% -8%, 50% -11%, 60% -8%, 70% -5%, 80% -8%, 90% -11%, 100% -8%, 100% 120%, 0% 120%); }
+}
+.pf-sat { animation: pf-sat-in 1.4s ease both; }
+@keyframes pf-sat-in { from { opacity: 0; } }
+
+@media (max-width: 1100px) { .pf-legend-map { display: none; } }
+@media (max-width: 1020px) { .pf-whatif { padding: 0 0.6rem; } }
+@media (max-width: 760px) {
+  .pf-map-tools { left: auto; right: 0.75rem; top: auto; bottom: auto; transform: translateY(calc(46vh - 150px)); }
+  .pf-mode button { padding: 0 0.55rem; }
+  .pf-logo { font-size: 1.05rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  .pf-mode .is-on i, .pf-shimmer, .pf-sat { animation: none; }
+}
+
+.pf-live-skill { margin-top: 2.6rem; }
+.pf-live-skill p { max-width: 66ch; margin: 0.6rem 0 0; color: var(--pf-mist); }
+.pf-live-skill table { width: 100%; max-width: 760px; margin-top: 1rem; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.pf-live-skill th, .pf-live-skill td { padding: 0.6rem 0.9rem 0.6rem 0; text-align: left; border-bottom: 1px solid var(--pf-line); font-weight: 400; }
+.pf-live-skill thead th { color: var(--pf-mist); font-size: 0.925rem; }
+.pf-live-skill td { font-weight: 600; }
+
+.pf-list-note { padding: 0.15rem 0.6rem 0.45rem; color: var(--pf-mist); font-size: 0.925rem; }

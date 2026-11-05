@@ -14,7 +14,10 @@ data_sources:
 - name: HydroRIVERS
   role: The river network used to link gauges upstream to downstream
   citation: HydroSHEDS / WWF
+- name: Open-Meteo
+  role: Current and forecast weather for live forecasts
+  citation: Weather data by Open-Meteo.com (CC BY 4.0)
 - name: NASA Blue Marble
   role: Earth imagery on this site
   citation: NASA Visible Earth
-disclaimer: Research prototype, not a warning service. An alert means forecast daily flow near a gauge's own 95th-percentile flow, not an official CWC flood level. Replays use recorded rain for the four forecast days, so live skill will be lower.
+disclaimer: Research prototype, not a warning service. An alert means forecast daily flow near a gauge's own 95th-percentile flow, not an official CWC flood level. Replays use recorded rain for the four forecast days. Live forecasts use Open-Meteo weather, which the model was not trained on.

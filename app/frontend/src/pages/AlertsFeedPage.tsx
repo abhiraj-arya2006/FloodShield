@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import { Check, ChevronDown, Copy } from 'lucide-react';
 import { fetchAlerts } from '../services/api';
 import { AlertItem, AlertsResponse } from '../types';
-import { DAYS, addDays, flow, forecastError, useForecastStore, useText } from '../platform/store';
+import { DAYS, addDays, flow, forecastError, useForecastStore, useShortDate, useSourceNote, useText } from '../platform/store';
 import { LoadError } from '../platform/PlatformNav';
 
 export const AlertsFeedPage: React.FC = () => {
   const { L, date, statusWord } = useText();
-  const { start, day, setDay } = useForecastStore();
+  const { start, day, setDay, ready, mode } = useForecastStore();
+  const note = useSourceNote();
+  const shortDate = useShortDate();
   const [data, setData] = useState<AlertsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -18,6 +20,7 @@ export const AlertsFeedPage: React.FC = () => {
   const target = addDays(start, day);
 
   useEffect(() => {
+    if (!ready) return;
     let live = true;
     setData(null);
     setError(null);
@@ -25,7 +28,7 @@ export const AlertsFeedPage: React.FC = () => {
       .then((d) => live && setData(d))
       .catch((err: Error) => live && setError(forecastError(err)));
     return () => { live = false; };
-  }, [target, day, attempt]);
+  }, [target, day, attempt, ready]);
 
   /* Because this is a replay, each alert can be checked against what the river went on to do. */
   const warned = data?.alerts.filter((a) => a.status === 'WARNING' && a.flood_day !== null) ?? [];
@@ -53,7 +56,9 @@ export const AlertsFeedPage: React.FC = () => {
         <div>
           <h1 aria-live="polite">
             {data
-              ? L(`${data.warning_count} warnings, ${data.watch_count} on watch`, `${data.warning_count} चेतावनी, ${data.watch_count} निगरानी में`)
+              ? data.total_alerts === 0
+                ? L('No alerts for this day', 'इस दिन कोई अलर्ट नहीं')
+                : L(`${data.warning_count} warnings, ${data.watch_count} on watch`, `${data.warning_count} चेतावनी, ${data.watch_count} निगरानी में`)
               : L('Reading the rivers', 'नदियों को पढ़ा जा रहा है')}
           </h1>
           <p className="pf-sub">
@@ -64,11 +69,11 @@ export const AlertsFeedPage: React.FC = () => {
         <div className="pf-controls">
           <div className="pf-chips" role="group" aria-label={L('Forecast day', 'पूर्वानुमान का दिन')}>
             {DAYS.map((k) => (
-              <button key={k} type="button" className={k === day ? 'is-on' : ''} aria-pressed={k === day} onClick={() => setDay(k)}>{L(`Day ${k}`, `दिन ${k}`)}</button>
+              <button key={k} type="button" className={k === day ? 'is-on' : ''} aria-pressed={k === day} onClick={() => setDay(k)}>{shortDate(addDays(start, k))}</button>
             ))}
           </div>
           <div className="pf-chips" role="group" aria-label={L('Filter by level', 'स्तर से छाँटें')}>
-            {([['ALL', L('All', 'सभी')], ['WARNING', statusWord('WARNING')], ['WATCH', statusWord('WATCH')]] as const).map(([key, label]) => (
+            {([['ALL', `${L('All', 'सभी')} ${data?.total_alerts ?? ''}`], ['WARNING', `${statusWord('WARNING')} ${data?.warning_count ?? ''}`], ['WATCH', `${statusWord('WATCH')} ${data?.watch_count ?? ''}`]] as const).map(([key, label]) => (
               <button key={key} type="button" className={filter === key ? 'is-on' : ''} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>
             ))}
           </div>
@@ -77,7 +82,8 @@ export const AlertsFeedPage: React.FC = () => {
 
       {error && <LoadError message={error} onRetry={() => setAttempt((a) => a + 1)} />}
 
-      <ul className="pf-feed">
+      <ul className="pf-feed" aria-busy={!data && !error}>
+        {!data && !error && Array.from({ length: 5 }, (_, i) => <li key={i} className="pf-shimmer is-tall" aria-hidden="true" />)}
         {alerts.map((a) => {
           const open = openId === a.gauge_id;
           const text = draft(a);
@@ -109,7 +115,7 @@ export const AlertsFeedPage: React.FC = () => {
                       {copiedId === a.gauge_id ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
                       {copiedId === a.gauge_id ? L('Copied', 'कॉपी हो गया') : L('Copy advisory', 'सलाह कॉपी करें')}
                     </button>
-                    <Link className="pf-link" to={`/gauge/${a.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
+                    <Link className="pf-link" viewTransition to={`/gauge/${a.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
                   </div>
                 </div>
               )}
@@ -117,10 +123,10 @@ export const AlertsFeedPage: React.FC = () => {
           );
         })}
         {data && !alerts.length && (
-          <li className="pf-empty is-large">{L('No alerts match. Choose another day or filter.', 'कोई अलर्ट नहीं मिला। दूसरा दिन या फ़िल्टर चुनें।')}</li>
+          <li className="pf-empty is-large">{data.total_alerts === 0 && mode === 'live' ? L('All 46 gauges are below their alert levels for this day.', 'इस दिन सभी 46 गेज अपने अलर्ट स्तर से नीचे हैं।') : L('No alerts match. Choose another day or filter.', 'कोई अलर्ट नहीं मिला। दूसरा दिन या फ़िल्टर चुनें।')}</li>
         )}
       </ul>
-      <p className="pf-note">{L('STG-Mamba replay using recorded rain, not a live forecast. Research prototype, not an official flood warning.', 'दर्ज बारिश के साथ STG-Mamba रीप्ले, लाइव पूर्वानुमान नहीं। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं।')}</p>
+      <p className="pf-note">{note}</p>
     </main>
   );
 };

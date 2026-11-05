@@ -4,7 +4,7 @@ import { Bell, GitBranch, Layers, Map as MapIcon, MessageCircle, SlidersHorizont
 import { useLanguage } from '../i18n/LanguageContext';
 import { WhatIfModal } from '../components/common/WhatIfModal';
 import { AskPanel } from './AskPanel';
-import { useText } from './store';
+import { clockTime, useForecastStore, useText } from './store';
 import './platform.css';
 
 export const PlatformNav: React.FC<{ embedded?: boolean }> = ({ embedded = false }) => {
@@ -12,6 +12,7 @@ export const PlatformNav: React.FC<{ embedded?: boolean }> = ({ embedded = false
   const { language, setLanguage } = useLanguage();
   const [whatIfOpen, setWhatIfOpen] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
+  const { mode, live, setMode } = useForecastStore();
   const links = [
     { to: '/dashboard', icon: MapIcon, label: L('Map', 'नक्शा') },
     { to: '/river', icon: GitBranch, label: L('Rivers', 'नदियाँ') },
@@ -22,19 +23,29 @@ export const PlatformNav: React.FC<{ embedded?: boolean }> = ({ embedded = false
   return (
     <>
       <header className={`pf-nav${embedded ? ' is-embedded' : ''}`}>
-        <Link to="/" className="pf-logo">FloodShield</Link>
+        <Link to="/" viewTransition className="pf-logo">FloodShield</Link>
         <nav aria-label="Main">
           {links.map(({ to, icon: Icon, label }) => (
-            <NavLink key={to} to={to} className={({ isActive }) => (isActive ? 'is-on' : '')}>
+            <NavLink key={to} to={to} viewTransition className={({ isActive }) => (isActive ? 'is-on' : '')}>
               <Icon size={17} aria-hidden="true" />
               <span>{label}</span>
             </NavLink>
           ))}
         </nav>
         <div className="pf-nav-end">
-          <span className="pf-demo" title={L('Real STG-Mamba forecasts for 2009 to 2018, using recorded rain. Not live.', '2009 से 2018 के असली STG-Mamba पूर्वानुमान, दर्ज बारिश के साथ। लाइव नहीं।')}>
-            {L('STG-Mamba replay', 'STG-Mamba रीप्ले')}
-          </span>
+          <div
+            className="pf-mode"
+            role="group"
+            aria-label={L('Forecast source', 'पूर्वानुमान का स्रोत')}
+            title={live ? L(`Updated ${clockTime(live.generated_at)} IST${live.stale ? ', refresh failed' : ''}`, `${clockTime(live.generated_at)} IST पर अपडेट${live.stale ? ', ताज़ा नहीं हो सका' : ''}`) : L('Live forecast unavailable', 'लाइव पूर्वानुमान उपलब्ध नहीं')}
+          >
+            <button type="button" className={mode === 'live' ? 'is-on' : ''} aria-pressed={mode === 'live'} disabled={!live} onClick={() => setMode('live')}>
+              <i aria-hidden="true" />{L('Live', 'लाइव')}
+            </button>
+            <button type="button" className={mode === 'past' ? 'is-on' : ''} aria-pressed={mode === 'past'} onClick={() => setMode('past')}>
+              {L('Past', 'पिछला')}
+            </button>
+          </div>
           <button type="button" className="pf-ask-open" onClick={() => setAskOpen(true)}>
             <MessageCircle size={16} aria-hidden="true" />
             {L('Ask', 'पूछें')}

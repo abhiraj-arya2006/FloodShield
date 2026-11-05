@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import gsap from 'gsap';
-import { Pause, Play, Search } from 'lucide-react';
+import { Maximize2, Minus, Pause, Play, Plus, Search, X } from 'lucide-react';
 import { AlertStatus, GaugeForecastRow } from '../types';
-import { DAYS, LAST_DAY, addDays, countStatus, flow, useForecastStore, useFourDays, useNetwork, useText } from '../platform/store';
+import { DAYS, LAST_DAY, addDays, clockTime, countStatus, flow, useForecastStore, useFourDays, useNetwork, useShortDate, useSourceNote, useText } from '../platform/store';
 import { LoadError } from '../platform/PlatformNav';
 
 const COLORS: Record<AlertStatus, string> = { OK: '#D9A95C', WATCH: '#F5B921', WARNING: '#FF4D7D' };
@@ -18,7 +18,9 @@ const VIEWS: Record<string, { lon: number; lat: number; width: number }> = {
 
 export const DashboardPage: React.FC = () => {
   const { L, date, statusWord } = useText();
-  const { start, day, setStart, setDay } = useForecastStore();
+  const { start, day, setStart, setDay, mode, live, ready, liveFailed } = useForecastStore();
+  const note = useSourceNote();
+  const shortDate = useShortDate();
   const { network, error: netError, retry: retryNet } = useNetwork();
   const { rows, error, retry } = useFourDays(start);
   const [basin, setBasin] = useState('ALL');
@@ -28,7 +30,11 @@ export const DashboardPage: React.FC = () => {
   const [playing, setPlaying] = useState(false);
   const [unit, setUnit] = useState(0.02);
   const svgRef = useRef<SVGSVGElement>(null);
-  const view = useRef({ ...VIEWS.ALL });
+  /* The map opens from high above and falls to the rivers, echoing the film's descent. */
+  const view = useRef({ lon: 80.7, lat: 20.2, width: 110 });
+  const firstView = useRef(true);
+  const [zoom, setZoom] = useState(1);
+  const [shownWarnings, setShownWarnings] = useState(0);
 
   /* Keep marks the same size on screen at any zoom. */
   const applyView = () => {
@@ -49,9 +55,31 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const tween = gsap.to(view.current, { ...VIEWS[basin], duration: still ? 0 : 1.4, ease: 'power3.inOut', onUpdate: applyView });
+    const target = VIEWS[basin];
+    const tween = gsap.to(view.current, {
+      lon: target.lon,
+      lat: target.lat,
+      width: target.width / zoom,
+      duration: still ? 0 : firstView.current ? 2.6 : 1.2,
+      ease: firstView.current ? 'power4.out' : 'power3.inOut',
+      onUpdate: applyView,
+    });
+    firstView.current = false;
     return () => { tween.kill(); };
-  }, [basin]);
+  }, [basin, zoom]);
+
+  /* Left and right arrow keys change the day, unless someone is typing. */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      const current = useForecastStore.getState().day;
+      if (e.key === 'ArrowRight' && current < LAST_DAY) { setPlaying(false); setDay(current + 1); }
+      if (e.key === 'ArrowLeft' && current > 1) { setPlaying(false); setDay(current - 1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [setDay]);
 
   useEffect(() => {
     if (!playing) return;
@@ -67,6 +95,15 @@ export const DashboardPage: React.FC = () => {
   const today = rows?.[day];
   const warnings = countStatus(rows, day, 'WARNING');
   const watches = countStatus(rows, day, 'WATCH');
+  /* The headline's number counts to its new value when the day changes. */
+  useEffect(() => {
+    const counter = { value: shownWarnings };
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tween = gsap.to(counter, { value: warnings, duration: still ? 0 : 0.6, ease: 'power2.out', onUpdate: () => setShownWarnings(Math.round(counter.value)) });
+    return () => { tween.kill(); };
+    // eslint-disable-next-line
+  }, [warnings]);
+
   const inBasin = (r: { basin: string }) => basin === 'ALL' || r.basin === basin;
 
   const list = useMemo(() => {
@@ -78,6 +115,14 @@ export const DashboardPage: React.FC = () => {
       .filter((r) => filter === 'ALL' || r.status === filter)
       .sort((a, b) => b.predicted_m3s / b.q95_m3s - a.predicted_m3s / a.q95_m3s);
   }, [today, query, filter, basin]);
+
+  /* When nothing is flagged, show the gauges nearest their warning level instead of an empty list. */
+  const closest = useMemo(() => {
+    if (!today || list.length || query.trim() || filter !== 'ALL') return [];
+    return [...today.values()].filter((r) => inBasin(r)).sort((a, b) => b.predicted_m3s / b.warning_m3s - a.predicted_m3s / a.warning_m3s).slice(0, 8);
+    // eslint-disable-next-line
+  }, [today, list, query, filter, basin]);
+  const shownList = list.length ? list : closest;
 
   /* With many warnings, only the most extreme are named, so the map stays readable. */
   const named = useMemo(() => {
@@ -154,16 +199,30 @@ export const DashboardPage: React.FC = () => {
         </svg>
       </div>
 
+      <div className="pf-map-tools" role="group" aria-label={L('Map zoom', 'नक्शा ज़ूम')}>
+        <button type="button" aria-label={L('Zoom in', 'ज़ूम इन')} disabled={zoom >= 4} onClick={() => setZoom((z) => z * 1.5)}><Plus size={18} /></button>
+        <button type="button" aria-label={L('Zoom out', 'ज़ूम आउट')} disabled={zoom <= 0.5} onClick={() => setZoom((z) => z / 1.5)}><Minus size={18} /></button>
+        <button type="button" aria-label={L('Reset map', 'नक्शा रीसेट करें')} onClick={() => { setZoom(1); setBasin('ALL'); }}><Maximize2 size={16} /></button>
+      </div>
+      <div className="pf-legend-map" aria-hidden="true">
+        <span><i className="pf-dot is-OK" />{statusWord('OK')}</span>
+        <span><i className="pf-dot is-WATCH" />{statusWord('WATCH')}</span>
+        <span><i className="pf-dot is-WARNING" />{statusWord('WARNING')}</span>
+        <span className="pf-legend-line"><i />{L('Thicker river, higher flow', 'मोटी नदी, अधिक प्रवाह')}</span>
+      </div>
+
       <section className="pf-float pf-left">
-        <h1 aria-live="polite">
+        {!ready && <p className="pf-reading" role="status">{L("Running the model on today's weather", 'आज के मौसम पर मॉडल चलाया जा रहा है')}</p>}
+        {liveFailed && <p className="pf-reading" role="status">{L("Today's forecast couldn't be made. Showing past years.", 'आज का पूर्वानुमान नहीं बन सका। पिछले वर्ष दिखाए जा रहे हैं।')}</p>}
+        <h1>
           {rows
             ? warnings
-              ? L(`${warnings} ${warnings === 1 ? 'gauge' : 'gauges'} on flood warning`, `${warnings} गेज पर बाढ़ चेतावनी`)
+              ? L(`${shownWarnings} ${warnings === 1 ? 'gauge' : 'gauges'} on flood warning`, `${shownWarnings} गेज पर बाढ़ चेतावनी`)
               : L('No flood warnings', 'कोई बाढ़ चेतावनी नहीं')
             : L('Reading the rivers', 'नदियों को पढ़ा जा रहा है')}
         </h1>
         <p className="pf-sub">
-          {date(shownDate)}. {L(`${watches} more on watch.`, `${watches} और निगरानी में।`)}
+          {date(shownDate)}. {watches === 0 ? L('None on watch.', 'कोई निगरानी में नहीं।') : warnings === 0 ? L(`${watches} on watch.`, `${watches} निगरानी में।`) : L(`${watches} more on watch.`, `${watches} और निगरानी में।`)}
         </p>
 
         {loadError && <LoadError message={loadError} onRetry={() => { retry(); retryNet(); }} />}
@@ -172,10 +231,10 @@ export const DashboardPage: React.FC = () => {
           {DAYS.map((k) => {
             const count = countStatus(rows, k, 'WARNING');
             return (
-              <button key={k} type="button" className={k === day ? 'is-on' : ''} aria-pressed={k === day} onClick={() => { setPlaying(false); setDay(k); }}>
+              <button key={k} type="button" className={k === day ? 'is-on' : ''} aria-pressed={k === day} aria-label={L(`Day ${k}, ${date(addDays(start, k))}, ${count} warnings`, `दिन ${k}, ${date(addDays(start, k))}, ${count} चेतावनी`)} onClick={() => { setPlaying(false); setDay(k); }}>
                 <span className="pf-day-bar"><i style={{ height: `${Math.min(100, 8 + count * 7)}%` }} /></span>
                 <b>{count}</b>
-                <span>{L(`Day ${k}`, `दिन ${k}`)}</span>
+                <span>{shortDate(addDays(start, k))}</span>
               </button>
             );
           })}
@@ -195,10 +254,17 @@ export const DashboardPage: React.FC = () => {
             {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
             {playing ? L('Pause', 'रोकें') : L('Play four days', 'चार दिन चलाएँ')}
           </button>
-          <label className="pf-date">
-            <span>{L('Forecast made on', 'पूर्वानुमान की तारीख')}</span>
-            <input type="date" value={start} min={network?.min} max={network?.max} onChange={(e) => e.target.value && setStart(e.target.value)} />
-          </label>
+          {mode === 'past' ? (
+            <label className="pf-date">
+              <span>{L('Forecast made on', 'पूर्वानुमान की तारीख')}</span>
+              <input type="date" value={start} min={network?.min} max={network?.max} onChange={(e) => e.target.value && setStart(e.target.value)} />
+            </label>
+          ) : live && (
+            <p className="pf-updated">
+              <b>{L(`Forecast made ${date(live.made_on)}`, `${date(live.made_on)} को बना पूर्वानुमान`)}</b>
+              {live.stale ? L(`Refresh failed. Last updated ${clockTime(live.generated_at)} IST`, `ताज़ा नहीं हो सका। पिछला अपडेट ${clockTime(live.generated_at)} IST`) : L(`Updated ${clockTime(live.generated_at)} IST`, `${clockTime(live.generated_at)} IST पर अपडेट`)}
+            </p>
+          )}
         </div>
 
         <div className="pf-chips" role="group" aria-label={L('River basin', 'नदी बेसिन')}>
@@ -206,7 +272,7 @@ export const DashboardPage: React.FC = () => {
             <button key={key} type="button" className={basin === key ? 'is-on' : ''} aria-pressed={basin === key} onClick={() => setBasin(key)}>{label}</button>
           ))}
         </div>
-        <p className="pf-disclaim">{L('STG-Mamba replay using recorded rain, not a live forecast. Research prototype, not an official flood warning.', 'दर्ज बारिश के साथ STG-Mamba रीप्ले, लाइव पूर्वानुमान नहीं। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं।')}</p>
+        <p className="pf-disclaim">{note}</p>
       </section>
 
       <aside className="pf-float pf-right">
@@ -215,6 +281,7 @@ export const DashboardPage: React.FC = () => {
             <div className="pf-detail-head">
               <h2>{selected.name}</h2>
               <span className={`pf-status is-${selected.status}`}>{statusWord(selected.status)}</span>
+              <button type="button" className="pf-detail-close" aria-label={L('Clear selection', 'चयन हटाएँ')} onClick={() => setSelectedId(null)}><X size={16} /></button>
             </div>
             <p className="pf-sub">{selected.river === selected.basin ? selected.river : `${selected.river}, ${selected.basin}`}</p>
             <p className="pf-big">{flow(selected.predicted_m3s)} <small>m³/s</small></p>
@@ -225,7 +292,7 @@ export const DashboardPage: React.FC = () => {
             <p className="pf-sub">
               {L(`${Math.round((selected.predicted_m3s / selected.q95_m3s) * 100)}% of this gauge's high-flow level`, `इस गेज के उच्च प्रवाह स्तर का ${Math.round((selected.predicted_m3s / selected.q95_m3s) * 100)}%`)}
             </p>
-            <Link className="pf-link" to={`/gauge/${selected.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
+            <Link className="pf-link" viewTransition to={`/gauge/${selected.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
           </div>
         ) : (
           <p className="pf-sub pf-hint">{L('Point at any gauge on the map to read its forecast.', 'पूर्वानुमान पढ़ने के लिए नक्शे पर किसी गेज पर जाएँ।')}</p>
@@ -237,14 +304,16 @@ export const DashboardPage: React.FC = () => {
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={L('Search 46 gauges', '46 गेज खोजें')} aria-label={L('Search gauges', 'गेज खोजें')} />
           </label>
           <div className="pf-chips is-small" role="group" aria-label={L('Filter by level', 'स्तर से छाँटें')}>
-            {([['ALL', L('All', 'सभी')], ['WARNING', statusWord('WARNING')], ['WATCH', statusWord('WATCH')]] as const).map(([key, label]) => (
+            {([['ALL', `${L('All', 'सभी')} ${warnings + watches}`], ['WARNING', `${statusWord('WARNING')} ${warnings}`], ['WATCH', `${statusWord('WATCH')} ${watches}`]] as const).map(([key, label]) => (
               <button key={key} type="button" className={filter === key ? 'is-on' : ''} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>
             ))}
           </div>
         </div>
 
-        <ul className="pf-list">
-          {list.map((r) => (
+        <ul className="pf-list" aria-busy={!rows}>
+          {!rows && Array.from({ length: 6 }, (_, i) => <li key={i} className="pf-shimmer" aria-hidden="true" />)}
+          {closest.length > 0 && <li className="pf-list-note">{L('Nothing flagged. Closest to their high-flow level:', 'कुछ चिह्नित नहीं। अपने उच्च प्रवाह स्तर के सबसे करीब:')}</li>}
+          {shownList.map((r) => (
             <li key={r.gauge_id}>
               <button type="button" className={r.gauge_id === selectedId ? 'is-on' : ''} onClick={() => setSelectedId(r.gauge_id)}>
                 <span className={`pf-dot is-${r.status}`} aria-hidden="true" />
@@ -253,7 +322,11 @@ export const DashboardPage: React.FC = () => {
               </button>
             </li>
           ))}
-          {rows && !list.length && <li className="pf-empty">{L('Nothing matches. Clear the search or choose another filter.', 'कुछ नहीं मिला। खोज हटाएँ या दूसरा फ़िल्टर चुनें।')}</li>}
+          {rows && !shownList.length && (
+            <li className="pf-empty">
+              {L('Nothing matches. Clear the search or choose another filter.', 'कुछ नहीं मिला। खोज हटाएँ या दूसरा फ़िल्टर चुनें।')}
+            </li>
+          )}
         </ul>
       </aside>
     </main>

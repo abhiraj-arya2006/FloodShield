@@ -1,3 +1,6 @@
+import logging
+import threading
+
 from dotenv import load_dotenv
 
 load_dotenv()  # Reads ANTHROPIC_API_KEY from .env when it exists.
@@ -7,7 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
+from app.backend.live import forecaster as live_forecaster
 from app.backend.routes import router
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="FloodShield: River Flood Early Warning System",
@@ -50,3 +56,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 # Include API routes
 app.include_router(router)
+
+
+@app.on_event("startup")
+def warm_live_forecast():
+    """Prepares today's forecast in the background, so the first visitor doesn't wait for it."""
+    def warm():
+        try:
+            live_forecaster.current()
+        except Exception as error:
+            logger.warning("Couldn't prepare the live forecast at startup: %s", error)
+
+    threading.Thread(target=warm, daemon=True).start()
+

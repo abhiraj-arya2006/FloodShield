@@ -55,7 +55,7 @@ export const GaugeForecastPage: React.FC = () => {
 
   return (
     <main className="pf-page">
-      <Link className="pf-back" to="/dashboard"><ArrowLeft size={17} aria-hidden="true" />{L('Back to map', 'नक्शे पर वापस')}</Link>
+      <Link className="pf-back" viewTransition to="/dashboard"><ArrowLeft size={17} aria-hidden="true" />{L('Back to map', 'नक्शे पर वापस')}</Link>
 
       {loadError && <LoadError message={loadError} onRetry={() => { retry(); retryNet(); }} />}
       {network && !gauge && (
@@ -107,7 +107,7 @@ export const GaugeForecastPage: React.FC = () => {
             )}
             <div className="pf-legend">
               <span><i className="is-line" />{L('Forecast flow', 'पूर्वानुमानित प्रवाह')}</span>
-              <span><i className="is-dots" />{L('What the river actually did', 'नदी में असल में क्या हुआ')}</span>
+              {chart?.actual && <span><i className="is-dots" />{L('What the river actually did', 'नदी में असल में क्या हुआ')}</span>}
             </div>
           </section>
 
@@ -117,14 +117,14 @@ export const GaugeForecastPage: React.FC = () => {
               <div className="pf-chain-side">
                 <span className="pf-sub">{L('Flows in from', 'यहाँ से आता है')}</span>
                 {links.up.length
-                  ? links.up.map((l) => l.gauge && <Link key={l.gauge.gauge_id} to={`/gauge/${l.gauge.gauge_id}`}>{l.gauge.name}<small>{Math.round(l.km)} km</small></Link>)
+                  ? links.up.map((l) => l.gauge && <Link key={l.gauge.gauge_id} viewTransition to={`/gauge/${l.gauge.gauge_id}`}>{l.gauge.name}<small>{Math.round(l.km)} km</small></Link>)
                   : <b>{L('Start of the gauged river', 'गेज वाली नदी की शुरुआत')}</b>}
               </div>
               <div className="pf-chain-here">{gauge.name}</div>
               <div className="pf-chain-side">
                 <span className="pf-sub">{L('Flows on to', 'यहाँ जाता है')}</span>
                 {links.down?.gauge
-                  ? <Link to={`/gauge/${links.down.gauge.gauge_id}`}>{links.down.gauge.name}<small>{Math.round(links.down.km)} km</small></Link>
+                  ? <Link viewTransition to={`/gauge/${links.down.gauge.gauge_id}`}>{links.down.gauge.name}<small>{Math.round(links.down.km)} km</small></Link>
                   : <b>{L('Last gauge on this river', 'इस नदी का आखिरी गेज')}</b>}
               </div>
             </div>

@@ -8,6 +8,7 @@ import pandas as pd
 import yaml
 from fastapi import HTTPException
 
+from app.backend.live import forecaster as live_forecaster
 from app.backend.schemas import (
     GaugeItem, GaugesResponse,
     EdgeItem, EdgesResponse,
@@ -153,7 +154,7 @@ class ReplaySource(DataSource):
         self._get_df()
         return DatesResponse(
             dates=self._available_dates,
-            data_period="2009-2012 (Held-out validation window)",
+            data_period="2009-2018",
             min_date=self._available_dates[0],
             max_date=self._available_dates[-1],
             total_dates=len(self._available_dates)
@@ -167,7 +168,15 @@ class ReplaySource(DataSource):
             )
 
         df = self._get_df()
-        sub = df[(df["date"] == date) & (df["lead_day"] == lead_day)]
+        live_flows = live_forecaster.lookup(date, lead_day)
+        if live_flows:
+            # Today's run of the model: there is no observed flow yet for these days.
+            sub = pd.DataFrame({
+                "date": date, "gauge_id": list(live_flows), "lead_day": lead_day,
+                "predicted_m3s": list(live_flows.values()), "observed_m3s": float("nan"), "mask": False,
+            })
+        else:
+            sub = df[(df["date"] == date) & (df["lead_day"] == lead_day)]
         if sub.empty:
             raise HTTPException(
                 status_code=404,
@@ -223,7 +232,7 @@ class ReplaySource(DataSource):
         return ForecastResponse(
             date=date,
             lead_day=lead_day,
-            mode="replay",
+            mode="live" if live_flows else "replay",
             headline_type=headline_type,
             total_gauges=len(rows),
             warning_count=warning_cnt,
@@ -336,7 +345,7 @@ class ReplaySource(DataSource):
         return AlertsResponse(
             date=date,
             lead_day=lead_day,
-            mode="replay",
+            mode=forecast_res.mode,
             total_alerts=len(alert_items),
             warning_count=warning_cnt,
             watch_count=watch_cnt,

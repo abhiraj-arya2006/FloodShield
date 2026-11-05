@@ -56,6 +56,16 @@ These are replays using recorded rain for the four forecast days. Live forecasti
 
 ---
 
+## Live Forecasts
+
+The app opens on a live forecast: `app/backend/live.py` runs the trained ensemble on 90 days of Open-Meteo weather plus 4 days of forecast rain, averaged over each real catchment, and refreshes every 3 hours. The Past button switches to the 2009-2018 replays.
+
+The weather isn't what the model trained on, so live skill is lower. On 2012, using Open-Meteo's archive and a correction fitted on 2010, lead days 2-4 caught about 69% of flood days with 56% of alerts false and a median NSE of 0.32. The training weather scores 81%, 44% and 0.47 on the same days. Real forecast rain will score lower still.
+
+To re-measure, download the CAMELS-IND zip, then run `scripts/validate_live_pipeline.py` and `scripts/fit_weather_correction.py`. The first also proves the live code reproduces the saved forecasts (median difference below 1e-6). Weather data by Open-Meteo.com (CC BY 4.0).
+
+---
+
 ## Ask Panel
 
 The Ask button answers questions from the forecast on screen. Common questions get built-in answers worked out from the data, with no API key. For open-ended questions, copy `.env.example` to `.env`, set `ANTHROPIC_API_KEY`, and restart the backend. Each answer says which of the two produced it. The key stays on the server, and questions are limited to 20 a minute per client.

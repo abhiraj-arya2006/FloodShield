@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { fetchDates, fetchEdges, fetchForecast, fetchGauges } from '../services/api';
 import { AlertStatus, EdgeItem, GaugeForecastRow, GaugeItem } from '../types';
 import { PlatformNav } from '../platform/PlatformNav';
-import { DEFAULT_START, forecastError, useForecastStore, useText } from '../platform/store';
+import { clockTime, forecastError, useForecastStore, useSourceNote, useText } from '../platform/store';
 import './livingRiver.css';
 
 /* Both rivers are drawn to one scale: x is real river distance to the sea. */
@@ -128,7 +128,8 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
   const [gauges, setGauges] = useState<GaugeItem[]>([]);
   const [edges, setEdges] = useState<EdgeItem[]>([]);
   const [range, setRange] = useState<{ min: string; max: string } | null>(null);
-  const [start, setStart] = useState(DEFAULT_START);
+  const { start, setStart, ready, mode, live: liveInfo } = useForecastStore();
+  const note = useSourceNote();
   const [rows, setRows] = useState<DayRows | null>(null);
   const [day, setDay] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -171,6 +172,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
 
   /* `date` in the API is the day being forecast, so day k from a start date is (start + k) at lead k. */
   useEffect(() => {
+    if (!ready) return;
     let live = true;
     stopSweep();
     setRows(null);
@@ -184,7 +186,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
       })
       .catch((err: Error) => live && setError(forecastError(err)));
     return () => { live = false; };
-  }, [start, attempt, playSweep, stopSweep]);
+  }, [start, attempt, playSweep, stopSweep, ready]);
 
   /* Play the four days once whenever a forecast is ready and on screen. */
   useEffect(() => {
@@ -232,8 +234,8 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
 
   /* Keep the Ask panel on the same forecast as this diagram. */
   useEffect(() => {
-    useForecastStore.setState({ start, day: wholeDay });
-  }, [start, wholeDay]);
+    useForecastStore.setState({ day: wholeDay });
+  }, [wholeDay]);
   const shownDate = addDays(start, wholeDay);
 
   const selected = selectedId ? layout.get(selectedId) : null;
@@ -384,6 +386,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
           </div>
           <div className="lr-actions">
             <button type="button" onClick={() => { setDay(1); playSweep(); }} disabled={!rows}>{L('Play four days', 'चार दिन चलाएँ')}</button>
+            {mode === 'past' ? (
             <label>
               {L('Forecast made on', 'पूर्वानुमान की तारीख')}
               <input
@@ -394,6 +397,9 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
                 onChange={(e) => e.target.value && setStart(e.target.value)}
               />
             </label>
+            ) : liveInfo && (
+              <p className="lr-updated">{L(`Forecast made ${date(liveInfo.made_on)}, updated ${clockTime(liveInfo.generated_at)} IST`, `${date(liveInfo.made_on)} को बना, ${clockTime(liveInfo.generated_at)} IST पर अपडेट`)}</p>
+            )}
           </div>
         </div>
 
@@ -410,7 +416,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
                     ? L(`${Math.round(selectedLive.flow).toLocaleString('en-IN')} m³/s forecast, ${Math.round((selectedLive.flow / selected.gauge.q95_m3s) * 100)}% of its high-flow level`, `${Math.round(selectedLive.flow).toLocaleString('en-IN')} m³/s पूर्वानुमान, उच्च प्रवाह स्तर का ${Math.round((selectedLive.flow / selected.gauge.q95_m3s) * 100)}%`)
                     : L('No forecast for this gauge on this day', 'इस दिन इस गेज का पूर्वानुमान नहीं है')}
                 </p>
-                <Link to={`/gauge/${selected.gauge.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
+                <Link viewTransition to={`/gauge/${selected.gauge.gauge_id}`}>{L('Open four-day forecast', 'चार दिन का पूर्वानुमान खोलें')}</Link>
               </>
             ) : (
               <p>{L('Point at a gauge on the river to read its forecast.', 'पूर्वानुमान पढ़ने के लिए नदी पर किसी गेज पर जाएँ।')}</p>
@@ -432,7 +438,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
       </main>
 
       <footer className="lr-note">
-        {L("STG-Mamba replay using recorded rain, not a live forecast. Research prototype, not an official flood warning. High flow means above a gauge's own 95th-percentile flow, and warnings start 10% below it. Earth imagery: NASA.", 'दर्ज बारिश के साथ STG-Mamba रीप्ले, लाइव पूर्वानुमान नहीं। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं। उच्च प्रवाह का अर्थ गेज का अपना 95वाँ प्रतिशतक है, और चेतावनी उससे 10% नीचे शुरू होती है। पृथ्वी की छवि: NASA।')}
+        {note}
       </footer>
     </div>
   );

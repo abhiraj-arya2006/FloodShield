@@ -64,6 +64,21 @@ export const ModelInfoPage: React.FC = () => {
         {L('Scored once on held-back test years 2013 to 2018, using recorded rain for the four forecast days, so real forecast rain will score lower. For comparison, a seasonal-average baseline at lead day 2 caught about 30% of flood days with 81% of its alerts false, and a median NSE of 0.13.', 'रोके गए टेस्ट वर्ष 2013 से 2018 पर एक बार जाँचा गया, चार पूर्वानुमान दिनों की दर्ज बारिश के साथ, इसलिए असली पूर्वानुमान वर्षा पर स्कोर कम होगा। तुलना के लिए, लीड दिन 2 पर मौसमी औसत आधाररेखा ने लगभग 30% बाढ़ दिन पकड़े, 81% अलर्ट गलत रहे और माध्य NSE 0.13 रहा।')}
       </p>
 
+      <section className="pf-live-skill">
+        <h2>{L('How accurate is the live forecast?', 'लाइव पूर्वानुमान कितना सटीक है?')}</h2>
+        <p>
+          {L('Live mode runs the same trained model on Open-Meteo weather, because the IMD weather it trained on isn\'t available in the same form today. We measured the cost on 2012, using Open-Meteo\'s archive and a weather correction fitted only on 2010.', 'लाइव मोड उसी प्रशिक्षित मॉडल को Open-Meteo मौसम पर चलाता है, क्योंकि जिस IMD मौसम पर यह प्रशिक्षित है वह आज उसी रूप में उपलब्ध नहीं है। हमने इसका असर 2012 पर मापा, Open-Meteo के अभिलेख और केवल 2010 पर फिट किए गए मौसम सुधार के साथ।')}
+        </p>
+        <table>
+          <thead><tr><th scope="col">{L('2012, lead days 2 to 4', '2012, लीड दिन 2 से 4')}</th><th scope="col">{L('Flood days caught', 'पकड़े गए बाढ़ दिन')}</th><th scope="col">{L('Alerts false', 'गलत अलर्ट')}</th><th scope="col">{L('Median NSE', 'माध्य NSE')}</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">{L('Training weather (IMD)', 'प्रशिक्षण मौसम (IMD)')}</th><td>81%</td><td>44%</td><td>0.47</td></tr>
+            <tr><th scope="row">{L('Live weather (Open-Meteo)', 'लाइव मौसम (Open-Meteo)')}</th><td>69%</td><td>56%</td><td>0.32</td></tr>
+          </tbody>
+        </table>
+        <p className="pf-note">{L('This used recorded weather, so real forecast rain will score lower still. Live forecasts have no river readings to check against yet.', 'इसमें दर्ज मौसम का उपयोग हुआ, इसलिए असली पूर्वानुमान वर्षा पर स्कोर और कम होगा। लाइव पूर्वानुमानों की जाँच के लिए अभी नदी के माप उपलब्ध नहीं हैं।')}</p>
+      </section>
+
       <section className="pf-steps">
         <h2>{L('How a forecast is made', 'पूर्वानुमान कैसे बनता है')}</h2>
         <ol>
@@ -91,7 +106,7 @@ export const ModelInfoPage: React.FC = () => {
         <button type="button" className="pf-btn" onClick={() => setDocsOpen(true)}>{L('Read the technical notes', 'तकनीकी नोट पढ़ें')}</button>
       </div>
       <p className="pf-note">
-        {L('Research prototype, not a warning service. A warning means forecast flow at or above 90% of a gauge\'s own 95th-percentile flow, set low on purpose to catch more floods. It is not an official danger level. Forecasts on this site are the model\'s saved replays using recorded rain, so live skill will be lower. Earth imagery: NASA.', 'शोध प्रोटोटाइप, चेतावनी सेवा नहीं। चेतावनी का अर्थ है पूर्वानुमानित प्रवाह गेज के अपने 95वें प्रतिशतक के 90% या उससे ऊपर है, जो अधिक बाढ़ पकड़ने के लिए जानबूझकर कम रखा गया है। यह आधिकारिक खतरे का स्तर नहीं है। इस साइट के पूर्वानुमान दर्ज बारिश के साथ मॉडल के सहेजे गए रीप्ले हैं, इसलिए लाइव प्रदर्शन कम होगा। पृथ्वी की छवि: NASA।')}
+        {L('Research prototype, not a warning service. A warning means forecast flow at or above 90% of a gauge\'s own 95th-percentile flow, set low on purpose to catch more floods. It is not an official danger level. Past-years forecasts are the model\'s saved replays using recorded rain. Live forecasts run the same model on Open-Meteo weather. Earth imagery: NASA.', 'शोध प्रोटोटाइप, चेतावनी सेवा नहीं। चेतावनी का अर्थ है पूर्वानुमानित प्रवाह गेज के अपने 95वें प्रतिशतक के 90% या उससे ऊपर है, जो अधिक बाढ़ पकड़ने के लिए जानबूझकर कम रखा गया है। यह आधिकारिक खतरे का स्तर नहीं है। पिछले वर्षों के पूर्वानुमान दर्ज बारिश के साथ सहेजे गए रीप्ले हैं। लाइव पूर्वानुमान उसी मॉडल को Open-Meteo मौसम पर चलाते हैं। पृथ्वी की छवि: NASA।')}
       </p>
       <TechDocsModal isOpen={docsOpen} onClose={() => setDocsOpen(false)} />
     </main>

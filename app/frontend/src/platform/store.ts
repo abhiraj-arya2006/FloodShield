@@ -13,18 +13,47 @@ const SERVICE_DOWN = "The forecast service isn't responding. Start the backend o
 export const forecastError = (err: Error) =>
   err.message.startsWith('No forecast') ? 'No forecast was made for this date. Choose a date from 2009 to 2018.' : SERVICE_DOWN;
 
+export type ForecastMode = 'live' | 'past';
+export interface LiveInfo { made_on: string; generated_at: string; stale: boolean; weather: string; }
+
 /* The forecast being looked at follows you from page to page. */
 interface ForecastState {
+  ready: boolean;
+  mode: ForecastMode;
+  live: LiveInfo | null;
+  liveFailed: boolean;
   start: string;
   day: number;
   setStart: (start: string) => void;
   setDay: (day: number) => void;
+  setMode: (mode: ForecastMode) => void;
+  loadLive: () => Promise<void>;
 }
-export const useForecastStore = create<ForecastState>((set) => ({
+export const useForecastStore = create<ForecastState>((set, get) => ({
+  ready: false,
+  mode: 'live',
+  live: null,
+  liveFailed: false,
   start: DEFAULT_START,
-  day: 4,
+  day: 1,
   setStart: (start) => set({ start }),
   setDay: (day) => set({ day }),
+  setMode: (mode) => {
+    const { live } = get();
+    if (mode === 'live' && live) set({ mode, start: live.made_on, day: 1 });
+    else set({ mode: 'past', start: DEFAULT_START, day: 4 });
+  },
+  /* Runs the model on today's weather. If that fails, past years still work. */
+  loadLive: async () => {
+    try {
+      const res = await fetch('/api/live');
+      if (!res.ok) throw new Error('Live forecast unavailable');
+      const live: LiveInfo = await res.json();
+      set({ live, liveFailed: false, ready: true, mode: 'live', start: live.made_on, day: 1 });
+    } catch {
+      set({ live: null, liveFailed: true, ready: true, mode: 'past', start: DEFAULT_START, day: 4 });
+    }
+  },
 }));
 
 export const addDays = (iso: string, n: number) => {
@@ -88,7 +117,9 @@ export function useFourDays(start: string) {
   const [rows, setRows] = useState<DayRows | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const ready = useForecastStore((state) => state.ready);
   useEffect(() => {
+    if (!ready) return;
     let live = true;
     setRows(null);
     setError(null);
@@ -101,9 +132,27 @@ export function useFourDays(start: string) {
       })
       .catch((err: Error) => live && setError(forecastError(err)));
     return () => { live = false; };
-  }, [start, attempt]);
+  }, [start, attempt, ready]);
   return { rows, error, retry: () => setAttempt((a) => a + 1) };
 }
 
 export const countStatus = (rows: DayRows | null, day: number, status: AlertStatus) =>
   rows ? [...rows[day].values()].filter((r) => r.status === status).length : 0;
+
+/* What the numbers on screen are, in the current mode. */
+export function useSourceNote() {
+  const { L } = useText();
+  const mode = useForecastStore((state) => state.mode);
+  return mode === 'live'
+    ? L('Live STG-Mamba forecast on Open-Meteo weather, less accurate than the published scores. Research prototype, not an official flood warning. Weather data by Open-Meteo.com.', 'Open-Meteo मौसम पर लाइव STG-Mamba पूर्वानुमान, प्रकाशित स्कोर से कम सटीक। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं। मौसम डेटा Open-Meteo.com से।')
+    : L('Saved STG-Mamba replay from past years, using recorded rain. Research prototype, not an official flood warning.', 'पिछले वर्षों का सहेजा गया STG-Mamba रीप्ले, दर्ज बारिश के साथ। शोध प्रोटोटाइप, आधिकारिक बाढ़ चेतावनी नहीं।');
+}
+
+export const clockTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Kolkata' });
+
+/* Live-mode Day 1 is tomorrow, so a short date beside each day makes them easy to read. */
+export function useShortDate() {
+  const { date } = useText();
+  return (iso: string) => date(iso).split(' ').slice(0, 2).join(' ');
+}
