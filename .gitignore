@@ -41,3 +41,6 @@ app/frontend/dist/
 app/frontend/build/
 app/frontend/.next/
 app/frontend/.vite/
+
+# Local tool settings
+.claude/
