@@ -1,0 +1,154 @@
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-display: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --font-sans: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  /* the old small monospace labels now use the same family; numbers stay tabular */
+  --font-mono: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  --font-devanagari: 'Noto Sans Devanagari', 'Bricolage Grotesque Variable', system-ui, sans-serif;
+
+  --color-midnight: #07141C;
+  --color-midnight-light: #0B1E26;
+  --color-surface: #0F2831;
+  --color-surface-hover: #14343F;
+  --color-border-subtle: rgba(216, 230, 228, 0.09);
+  --color-border-accent: rgba(92, 184, 196, 0.28);
+
+  --color-mist: #D8E6E4;
+  --color-silt: #D2A867;
+  --color-cyan-glow: #5CB8C4;
+  --color-turquoise: #7CC4A4;
+  --color-critical: #FF6A3D;
+  --color-high: #E8B94A;
+  --color-moderate: #E8B94A;
+  --color-low: #7CC4A4;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #07141C;
+  color: #D8E6E4;
+  font-variant-numeric: tabular-nums;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: var(--font-display);
+}
+
+.font-devanagari {
+  font-family: var(--font-devanagari);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #07141C;
+}
+::-webkit-scrollbar-thumb {
+  background: #1C4350;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5CB8C4;
+}
+
+/* Radar scan sweep animation */
+@keyframes radar-sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radar-sweep 6s linear infinite;
+}
+
+/* Topographic map contour pattern */
+.bg-topo-pattern {
+  background-image: radial-gradient(circle at 50% 50%, rgba(92, 184, 196, 0.04) 0%, transparent 60%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 32px 32px, 32px 32px;
+}
+
+.bg-dot-grid {
+  background-image: radial-gradient(rgba(92, 184, 196, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Leaflet dark theme override for popups */
+.leaflet-popup-content-wrapper {
+  background: #0B1E26 !important;
+  color: #D8E6E4 !important;
+  border: 1px solid rgba(92, 184, 196, 0.3) !important;
+  border-radius: 0.875rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 0 15px rgba(92, 184, 196, 0.15) !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-tip {
+  background: #0B1E26 !important;
+  border: 1px solid rgba(92, 184, 196, 0.3) !important;
+}
+
+.leaflet-container {
+  background-color: #07141C !important;
+}
+
+.leaflet-bar {
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+.leaflet-bar a {
+  background-color: #0B1E26 !important;
+  color: #8FA9AB !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #14343F !important;
+  color: #5CB8C4 !important;
+}
+
+
+/* The dashboard surfaces after the intro: the water level drains and the page settles in. */
+.fs-arrive {
+  animation: fs-arrive 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes fs-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(36px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fs-arrive {
+    animation: none;
+  }
+}
+
+/* Labels read as sentences, not tracked-out capitals. */
+.uppercase {
+  text-transform: none;
+}
+.tracking-wider,
+.tracking-widest {
+  letter-spacing: 0;
+}

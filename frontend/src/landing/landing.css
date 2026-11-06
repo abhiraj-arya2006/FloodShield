@@ -1,0 +1,308 @@
+.fs-landing {
+  --ink: #07141c;
+  --mist: #d8e6e4;
+  --silt: #d2a867;
+  --amber: #ff7a3d;
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  color: var(--mist);
+  background: var(--ink);
+}
+
+.fs-track {
+  position: relative;
+  height: 640vh;
+}
+
+.fs-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.fs-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+/* top bar */
+.fs-top {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: clamp(16px, 2.4vw, 32px) clamp(18px, 3.2vw, 48px);
+  z-index: 5;
+}
+.fs-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.15rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--mist);
+}
+.fs-skip {
+  font: inherit;
+  font-size: 0.9rem;
+  color: rgba(216, 230, 228, 0.75);
+  background: rgba(7, 20, 28, 0.35);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(216, 230, 228, 0.22);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.fs-skip:hover {
+  color: #fff;
+  border-color: rgba(216, 230, 228, 0.6);
+  background: rgba(7, 20, 28, 0.6);
+}
+.fs-skip:focus-visible,
+.fs-cta button:focus-visible,
+.fs-dots button:focus-visible {
+  outline: 2px solid var(--silt);
+  outline-offset: 3px;
+}
+
+/* copy blocks */
+.fs-copy {
+  position: absolute;
+  z-index: 4;
+  will-change: opacity, transform;
+  opacity: 0;
+  visibility: hidden;
+  text-shadow: 0 2px 30px rgba(3, 10, 14, 0.65);
+}
+.fs-copy h1,
+.fs-copy h2 {
+  margin: 0;
+  font-weight: 280;
+  letter-spacing: -0.028em;
+  line-height: 1.02;
+  font-size: clamp(2.4rem, 6.2vw, 6rem);
+}
+.fs-hero h1 {
+  font-size: clamp(2.8rem, 8.4vw, 8.4rem);
+  font-weight: 260;
+}
+.fs-copy p {
+  margin: clamp(14px, 2vw, 24px) 0 0;
+  font-size: clamp(1rem, 1.35vw, 1.25rem);
+  line-height: 1.5;
+  font-weight: 350;
+  color: rgba(216, 230, 228, 0.82);
+  max-width: 34ch;
+}
+.fs-copy small {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.82rem;
+  color: rgba(216, 230, 228, 0.5);
+}
+
+.fs-copy--center {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 6vw 6vh;
+}
+.fs-copy--center p {
+  max-width: 44ch;
+}
+.fs-copy--left {
+  left: clamp(20px, 5vw, 84px);
+  bottom: clamp(48px, 11vh, 120px);
+  max-width: min(40vw, 600px);
+}
+.fs-copy--top {
+  left: clamp(20px, 5vw, 84px);
+  top: clamp(76px, 14vh, 150px);
+  max-width: min(60vw, 820px);
+}
+.fs-copy--top h2 {
+  font-size: clamp(2rem, 4.6vw, 4.4rem);
+}
+
+/* the one orchestrated page-load moment: the headline surfaces like text under water */
+.fs-hero h1 span {
+  display: inline-block;
+  animation: fs-surface 2.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.fs-hero p {
+  animation: fs-surface-p 2.2s 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes fs-surface {
+  from {
+    opacity: 0;
+    filter: blur(18px);
+    letter-spacing: 0.06em;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    letter-spacing: -0.028em;
+    transform: none;
+  }
+}
+@keyframes fs-surface-p {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* CTA */
+.fs-cta {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 6vh, 64px);
+  transform: translateX(-50%);
+  z-index: 6;
+  opacity: 0;
+  visibility: hidden;
+}
+.fs-cta button {
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--mist);
+  border: 0;
+  border-radius: 999px;
+  padding: 16px 34px;
+  cursor: pointer;
+  box-shadow: 0 10px 50px rgba(92, 184, 196, 0.35);
+  transition: transform 0.25s, box-shadow 0.25s, background 0.25s;
+}
+.fs-cta button:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 14px 60px rgba(92, 184, 196, 0.55);
+}
+
+/* scroll hint */
+.fs-hint {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(18px, 3.4vh, 36px);
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: rgba(216, 230, 228, 0.65);
+}
+.fs-hint-drop {
+  width: 1px;
+  height: 44px;
+  background: linear-gradient(to bottom, rgba(216, 230, 228, 0), rgba(216, 230, 228, 0.8));
+  position: relative;
+  overflow: hidden;
+}
+.fs-hint-drop::after {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: -10px;
+  width: 3px;
+  height: 10px;
+  border-radius: 3px;
+  background: #fff;
+  animation: fs-drip 1.8s ease-in infinite;
+}
+@keyframes fs-drip {
+  to {
+    transform: translateY(56px);
+  }
+}
+
+/* scene index */
+.fs-dots {
+  position: absolute;
+  right: clamp(14px, 2.4vw, 36px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.fs-dots button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85rem;
+  color: rgba(216, 230, 228, 0.9);
+}
+.fs-dots button span {
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.fs-dots button:hover span,
+.fs-dots button:focus-visible span,
+.fs-dots button[data-active='true'] span {
+  opacity: 1;
+  transform: none;
+}
+.fs-dots button::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1px solid rgba(216, 230, 228, 0.7);
+  transition: background 0.3s, transform 0.3s, border-color 0.3s;
+}
+.fs-dots button[data-active='true']::after {
+  background: var(--silt);
+  border-color: var(--silt);
+  transform: scale(1.35);
+}
+
+/* mobile */
+@media (max-width: 760px) {
+  .fs-copy--left {
+    max-width: 88vw;
+    bottom: auto;
+    top: clamp(70px, 12vh, 120px);
+  }
+  .fs-copy--top {
+    max-width: 90vw;
+  }
+  .fs-copy p {
+    max-width: 40ch;
+  }
+  .fs-dots button span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-hero h1 span,
+  .fs-hero p,
+  .fs-hint-drop::after {
+    animation: none;
+  }
+}
