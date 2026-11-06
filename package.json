@@ -1,0 +1,12 @@
+{
+  "name": "floodshield",
+  "private": true,
+  "description": "Run from this folder: npm run dev starts the backend and the site together.",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "backend": "python -m uvicorn app.backend.main:app --host 127.0.0.1 --port 8000",
+    "site": "npm --prefix app/frontend run dev",
+    "build": "npm --prefix app/frontend run build",
+    "test": "python -m pytest tests -q"
+  }
+}

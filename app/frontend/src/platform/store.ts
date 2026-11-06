@@ -8,7 +8,7 @@ export const DAYS = [1, 2, 3, 4];
 export const LAST_DAY = 4;
 /* A real monsoon rise from the held-back test years: 0, 3, 10, then 21 gauges on warning. */
 export const DEFAULT_START = '2013-07-09';
-const SERVICE_DOWN = "The forecast service isn't responding. Start the backend on port 8000, then try again.";
+const SERVICE_DOWN = "The forecast service isn't responding. Check that npm run dev is still running in the project folder, then try again.";
 /* The model's archive has no forecast for some dates, which is different from the service being down. */
 export const forecastError = (err: Error) =>
   err.message.startsWith('No forecast') ? 'No forecast was made for this date. Reload the page to get the latest one.' : SERVICE_DOWN;

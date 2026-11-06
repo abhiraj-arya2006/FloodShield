@@ -71,7 +71,7 @@ export const AskPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           ? L('Too many questions in a short time. Wait a minute, then ask again.', 'कम समय में बहुत सारे सवाल। एक मिनट रुककर फिर पूछें।')
           : res.status === 404
             ? L('No forecast was made for this date. Reload the page to get the latest one.', 'इस तारीख का पूर्वानुमान नहीं है। नया पूर्वानुमान पाने के लिए पेज दोबारा लोड करें।')
-            : L("The forecast service isn't responding. Start the backend, then ask again.", 'पूर्वानुमान सेवा जवाब नहीं दे रही। बैकएंड चालू करके फिर पूछें।'));
+            : L("The forecast service isn't responding. Check that npm run dev is still running in the project folder, then ask again.", 'पूर्वानुमान सेवा जवाब नहीं दे रही। जाँचें कि प्रोजेक्ट फ़ोल्डर में npm run dev अभी चल रहा है, फिर पूछें।'));
         return;
       }
       const source = res.headers.get('X-Answered-By') ?? 'built-in';
@@ -86,7 +86,7 @@ export const AskPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       }
     } catch (err) {
       if ((err as Error).name !== 'AbortError') {
-        update(L("The forecast service isn't responding. Start the backend, then ask again.", 'पूर्वानुमान सेवा जवाब नहीं दे रही। बैकएंड चालू करके फिर पूछें।'));
+        update(L("The forecast service isn't responding. Check that npm run dev is still running in the project folder, then ask again.", 'पूर्वानुमान सेवा जवाब नहीं दे रही। जाँचें कि प्रोजेक्ट फ़ोल्डर में npm run dev अभी चल रहा है, फिर पूछें।'));
       }
     } finally {
       setBusy(false);

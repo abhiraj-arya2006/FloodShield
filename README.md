@@ -72,44 +72,27 @@ The Ask button answers questions from the forecast on screen. Common questions g
 
 ---
 
-## How to Run the Backend
+## How to Run
+
+Install once:
 
 ```bash
-# Install Python dependencies
 pip install -r requirements.txt
-pip install pyarrow
-
-# Run FastAPI backend (port 8000)
-python -m uvicorn app.backend.main:app --host 127.0.0.1 --port 8000
+npm --prefix app/frontend install
 ```
 
-Interactive OpenAPI documentation is available at `http://127.0.0.1:8000/docs`.
-
-### Run Backend Automated Tests
-```bash
-pytest tests/test_river_api.py -v
-```
-
----
-
-## How to Run the Frontend
+Then, from the project folder, one command starts the backend (port 8000) and, once it answers, the site (port 5173):
 
 ```bash
-# Navigate to the frontend directory
-cd app/frontend
-
-# Install dependencies (if not already linked)
-npm install
-
-# Start Vite dev server (port 5173)
 npm run dev
 ```
 
-Open `http://localhost:5173/` in your browser.
+Open `http://localhost:5173/dashboard`. Ctrl+C stops both. If a FloodShield backend is already running on port 8000 it is reused, and an older one without live forecasts is reported instead of used. The site lives in `app/frontend`; there is no other frontend folder.
 
-### Build Frontend for Production
+To run the two separately: `npm run backend` and `npm run site`. API documentation is at `http://127.0.0.1:8000/docs`.
+
 ```bash
-cd app/frontend
+npm test
 npm run build
 ```
 

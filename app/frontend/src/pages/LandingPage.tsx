@@ -37,6 +37,11 @@ float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
 return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
 float fbm(vec2 p){float v=0.,a=.5;for(int i=0;i<5;i++){v+=a*n(p);p=mat2(.8,.6,-.6,.8)*p*2.03+vec2(7.1,3.3);a*=.5;}return v;}
+/* the bright web sunlight makes as it passes through waves */
+float caus(vec2 p,float t){vec2 i=p;float k=1.;
+ for(int m=0;m<4;m++){float s=t*(1.-3.5/float(m+1));i=p+vec2(cos(s-i.x)+sin(s+i.y),sin(s-i.y)+cos(s+i.x));
+ k+=1./length(vec2(p.x/(sin(i.x+s)/.005),p.y/(cos(i.y+s)/.005)));}
+ k=1.17-pow(k/4.,1.4);return clamp(pow(abs(k),8.),0.,2.);}
 void main(){
  vec2 uv=gl_FragCoord.xy/R,c=(gl_FragCoord.xy-.5*R)/min(R.x,R.y);
  /* deep water with light shafts */
@@ -44,12 +49,22 @@ void main(){
  float x=c.x+(1.-uv.y)*.35;
  d+=vec3(.25,.5,.55)*n(vec2(x*5.+T*.05,T*.04))*n(vec2(x*13.-T*.07,3.))*pow(uv.y,2.)*1.1;
  /* scene A: looking up from under the flood at a monsoon sky */
- float cl=smoothstep(.36,.62,fbm(c*3.4+vec2(T*.02,-T*.012)));
+ float wA=1.-smoothstep(.12,.22,P);
+ /* the surface moves, so the sky seen through it bends and wobbles */
+ vec2 wv=vec2(n(c*6.+vec2(T*.55,T*.3)),n(c*6.+vec2(-T*.45,T*.4)+9.))-.5;
+ vec2 cs=c+wv*.045*wA;
+ float cl=smoothstep(.36,.62,fbm(cs*3.4+vec2(T*.02,-T*.012)));
  vec3 s=mix(vec3(.10,.38,.78),vec3(.97,.98,1.),cl);
  s*=1.-.28*exp(-c.y*c.y*16.)*(1.-smoothstep(.1,.2,P));
- float rad=length(c)+(fbm(c*3.+T*.05)-.5)*.2;
+ float rad=length(cs)+(fbm(c*3.+T*.05)-.5)*.2;
  float R0=mix(.66,1.7,smoothstep(.03,.22,P));
- vec3 A=mix(d*.55,s,1.-smoothstep(R0-.14,R0+.08,rad));
+ float inside=1.-smoothstep(R0-.14,R0+.08,rad);
+ vec3 A=mix(d*.55,s,inside);
+ /* light dancing on the underside of the waves, strongest in the window */
+ float k=caus(mod(cs*5.2+vec2(T*.04,-T*.03),6.28318)-250.,T*.32+23.);
+ A+=vec3(.55,.86,.95)*k*(.05+.2*inside)*wA;
+ /* the window's edge, where the surface bends light hardest, glints as it moves */
+ A+=vec3(.62,.9,1.)*exp(-pow((rad-R0+.04)/.045,2.))*(.18+.3*n(vec2(atan(c.y,c.x)*6.,T*.8)))*wA;
  /* scene B: storm dusk over the river, then the plunge under the surface */
  float hz=mix(.42,1.3,smoothstep(.37,.47,P));
  float y=uv.y-hz;
@@ -199,6 +214,9 @@ function paintLand(land: never): HTMLCanvasElement {
 const seeded = (count: number) => Array.from({ length: count }, () => [Math.random(), Math.random(), Math.random(), Math.random()]);
 const RAIN = seeded(420);
 const BUBBLES = seeded(46);
+/* Specks and small bubbles in the water around the shoal. */
+const SPECKS = seeded(150);
+const RISING = seeded(22);
 const toLand = (topo: unknown) => feature(topo as never, (topo as { objects: { land: never } }).objects.land) as never;
 
 export const LandingPage: React.FC = () => {
@@ -328,6 +346,29 @@ export const LandingPage: React.FC = () => {
       if (shoalOn) {
         shoalCanvas.style.opacity = String(1 - sm(0.19, 0.25, p));
         shoal?.render(t, intro.drop + sm(0.04, 0.23, p) * p * 190);
+      }
+
+      /* Slide 1: the water itself. Specks drift and sway, small bubbles rise toward the light. */
+      const waterA = 1 - sm(0.12, 0.22, p);
+      if (waterA > 0) {
+        const lift = p * h * 1.6;
+        for (const [a, b, c, d] of SPECKS) {
+          const y = (((b * h * 1.2 - t * (4 + c * 10) + lift * (0.5 + c)) % (h * 1.2)) + h * 1.2) % (h * 1.2) - h * 0.1;
+          const x = a * w + Math.sin(t * (0.3 + d * 0.5) + a * 40) * (8 + c * 16);
+          const r = 0.6 + c * c * 1.8;
+          ctx.fillStyle = `rgba(200,232,240,${(0.12 + d * 0.28) * waterA})`;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        }
+        for (const [a, b, c, d] of RISING) {
+          const y = h * 1.05 - ((((b + t * (0.035 + c * 0.05)) % 1) + 1) % 1) * h * 1.15 + lift * 0.4;
+          const x = a * w + Math.sin(t * 2.2 + d * 30) * (3 + c * 5);
+          const r = 1.5 + c * 4.5;
+          ctx.strokeStyle = `rgba(220,244,248,${0.38 * waterA})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = `rgba(240,252,255,${0.45 * waterA})`;
+          ctx.beginPath(); ctx.arc(x - r * 0.35, y - r * 0.35, Math.max(0.6, r * 0.2), 0, Math.PI * 2); ctx.fill();
+        }
       }
 
       /* Slide 2: rain over the river at dusk. */

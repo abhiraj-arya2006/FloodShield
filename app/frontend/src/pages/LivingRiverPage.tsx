@@ -163,7 +163,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
         setGauges(g.gauges);
         setEdges(e.edges);
       })
-      .catch(() => live && setError(L("The river network didn't load. Start the backend on port 8000, then try again.", 'नदी नेटवर्क लोड नहीं हुआ। पोर्ट 8000 पर बैकएंड चालू करें और फिर कोशिश करें।')));
+      .catch(() => live && setError(L("The river network didn't load. Check that npm run dev is still running in the project folder, then try again.", 'नदी नेटवर्क लोड नहीं हुआ। जाँचें कि प्रोजेक्ट फ़ोल्डर में npm run dev अभी चल रहा है, फिर कोशिश करें।')));
     return () => { live = false; };
     // eslint-disable-next-line
   }, [attempt]);
