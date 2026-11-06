@@ -1,0 +1,835 @@
+{
+ "split": "validation",
+ "run_name": "stg_mamba_perlead_hf10",
+ "decoder": "per_lead",
+ "best_epoch": 6,
+ "best_val_loss": 0.12048085594986692,
+ "samples": 1458,
+ "gauges": 46,
+ "negative_predictions_clipped": 16894,
+ "future_rain_mode": "observed",
+ "note": "future_rain mode observed uses real IMD rain for t+1..t+H, so these scores are optimistic compared with using a real rain forecast.",
+ "scores": {
+  "1": {
+   "median_nse": 0.6451047015733272,
+   "median_kge": 0.627537461265943,
+   "median_scored_days": 1450.0,
+   "min_scored_days": 861,
+   "worst_nse": [
+    {
+     "gauge_id": "03068",
+     "nse": -0.6856413529715994
+    },
+    {
+     "gauge_id": "08023",
+     "nse": 0.08783857961295727
+    },
+    {
+     "gauge_id": "08030",
+     "nse": 0.10937670133540289
+    },
+    {
+     "gauge_id": "03013",
+     "nse": 0.1310071278228817
+    },
+    {
+     "gauge_id": "08001",
+     "nse": 0.23226372272027718
+    }
+   ],
+   "worst_kge": [
+    {
+     "gauge_id": "03068",
+     "kge": -0.41956802947477034
+    },
+    {
+     "gauge_id": "03064",
+     "kge": 0.06747187660971787
+    },
+    {
+     "gauge_id": "08030",
+     "kge": 0.18446476906205655
+    },
+    {
+     "gauge_id": "08003",
+     "kge": 0.18762957141103598
+    },
+    {
+     "gauge_id": "03013",
+     "kge": 0.19736133359614227
+    }
+   ]
+  },
+  "2": {
+   "median_nse": 0.6255604496551146,
+   "median_kge": 0.6166809923027461,
+   "median_scored_days": 1450.5,
+   "min_scored_days": 860,
+   "worst_nse": [
+    {
+     "gauge_id": "03068",
+     "nse": -0.5390726885752779
+    },
+    {
+     "gauge_id": "08023",
+     "nse": 0.10019166024178983
+    },
+    {
+     "gauge_id": "08030",
+     "nse": 0.11615152858809208
+    },
+    {
+     "gauge_id": "08001",
+     "nse": 0.16507737461236627
+    },
+    {
+     "gauge_id": "03013",
+     "nse": 0.20583005955034972
+    }
+   ],
+   "worst_kge": [
+    {
+     "gauge_id": "03068",
+     "kge": -0.3215906447036887
+    },
+    {
+     "gauge_id": "03064",
+     "kge": 0.07230226866941358
+    },
+    {
+     "gauge_id": "08003",
+     "kge": 0.16369060954885695
+    },
+    {
+     "gauge_id": "08030",
+     "kge": 0.1923967713439042
+    },
+    {
+     "gauge_id": "03013",
+     "kge": 0.2609530843638761
+    }
+   ]
+  },
+  "3": {
+   "median_nse": 0.6184872318074337,
+   "median_kge": 0.6211158813619495,
+   "median_scored_days": 1451.0,
+   "min_scored_days": 859,
+   "worst_nse": [
+    {
+     "gauge_id": "03068",
+     "nse": -0.5173839866982821
+    },
+    {
+     "gauge_id": "08030",
+     "nse": 0.04162638730610457
+    },
+    {
+     "gauge_id": "08001",
+     "nse": 0.098216874915098
+    },
+    {
+     "gauge_id": "08023",
+     "nse": 0.11898106666042318
+    },
+    {
+     "gauge_id": "03013",
+     "nse": 0.14585970279144178
+    }
+   ],
+   "worst_kge": [
+    {
+     "gauge_id": "03068",
+     "kge": -0.30499693204375045
+    },
+    {
+     "gauge_id": "03064",
+     "kge": 0.0709946751509164
+    },
+    {
+     "gauge_id": "08030",
+     "kge": 0.12846935739802756
+    },
+    {
+     "gauge_id": "08003",
+     "kge": 0.15356020950223925
+    },
+    {
+     "gauge_id": "03013",
+     "kge": 0.23574947846012384
+    }
+   ]
+  },
+  "4": {
+   "median_nse": 0.6126168573974894,
+   "median_kge": 0.619889480571926,
+   "median_scored_days": 1451.5,
+   "min_scored_days": 858,
+   "worst_nse": [
+    {
+     "gauge_id": "03068",
+     "nse": -0.5543340848868679
+    },
+    {
+     "gauge_id": "08030",
+     "nse": -0.028000773146086733
+    },
+    {
+     "gauge_id": "08001",
+     "nse": 0.011655421518621645
+    },
+    {
+     "gauge_id": "03013",
+     "nse": 0.1284238841988069
+    },
+    {
+     "gauge_id": "08023",
+     "nse": 0.13726365697072773
+    }
+   ],
+   "worst_kge": [
+    {
+     "gauge_id": "03068",
+     "kge": -0.35196941558187067
+    },
+    {
+     "gauge_id": "08030",
+     "kge": 0.06783815676427629
+    },
+    {
+     "gauge_id": "03064",
+     "kge": 0.07883013805188832
+    },
+    {
+     "gauge_id": "08003",
+     "kge": 0.15415370376424065
+    },
+    {
+     "gauge_id": "08001",
+     "kge": 0.17561349204243648
+    }
+   ]
+  }
+ },
+ "flood": {
+  "2": {
+   "flood_days": 3125,
+   "hits": 2315,
+   "misses": 810,
+   "false_alarms": 1509,
+   "pooled_hit_rate": 0.7408,
+   "pooled_false_alarm_ratio": 0.3946129707112971,
+   "median_hit_rate": 0.747093023255814,
+   "median_false_alarm_ratio": 0.37933247753530164,
+   "gauges_without_any_alarm": 0,
+   "worst_hit_rate": [
+    {
+     "gauge_id": "08011",
+     "hit_rate": 0.5151515151515151,
+     "flood_days": 99,
+     "false_alarms": 4
+    },
+    {
+     "gauge_id": "03073",
+     "hit_rate": 0.5333333333333333,
+     "flood_days": 105,
+     "false_alarms": 2
+    },
+    {
+     "gauge_id": "08006",
+     "hit_rate": 0.5540540540540541,
+     "flood_days": 74,
+     "false_alarms": 13
+    },
+    {
+     "gauge_id": "03109",
+     "hit_rate": 0.5555555555555556,
+     "flood_days": 45,
+     "false_alarms": 16
+    },
+    {
+     "gauge_id": "03081",
+     "hit_rate": 0.625,
+     "flood_days": 72,
+     "false_alarms": 16
+    }
+   ]
+  },
+  "3": {
+   "flood_days": 3125,
+   "hits": 2342,
+   "misses": 783,
+   "false_alarms": 1522,
+   "pooled_hit_rate": 0.74944,
+   "pooled_false_alarm_ratio": 0.39389233954451347,
+   "median_hit_rate": 0.7555970149253731,
+   "median_false_alarm_ratio": 0.3668831168831169,
+   "gauges_without_any_alarm": 0,
+   "worst_hit_rate": [
+    {
+     "gauge_id": "08011",
+     "hit_rate": 0.5454545454545454,
+     "flood_days": 99,
+     "false_alarms": 8
+    },
+    {
+     "gauge_id": "03073",
+     "hit_rate": 0.5619047619047619,
+     "flood_days": 105,
+     "false_alarms": 2
+    },
+    {
+     "gauge_id": "03109",
+     "hit_rate": 0.5777777777777777,
+     "flood_days": 45,
+     "false_alarms": 18
+    },
+    {
+     "gauge_id": "08006",
+     "hit_rate": 0.6081081081081081,
+     "flood_days": 74,
+     "false_alarms": 14
+    },
+    {
+     "gauge_id": "03005",
+     "hit_rate": 0.6363636363636364,
+     "flood_days": 110,
+     "false_alarms": 10
+    }
+   ]
+  },
+  "4": {
+   "flood_days": 3125,
+   "hits": 2343,
+   "misses": 782,
+   "false_alarms": 1524,
+   "pooled_hit_rate": 0.74976,
+   "pooled_false_alarm_ratio": 0.39410395655546937,
+   "median_hit_rate": 0.761549395877754,
+   "median_false_alarm_ratio": 0.375552608311229,
+   "gauges_without_any_alarm": 0,
+   "worst_hit_rate": [
+    {
+     "gauge_id": "03073",
+     "hit_rate": 0.5333333333333333,
+     "flood_days": 105,
+     "false_alarms": 2
+    },
+    {
+     "gauge_id": "08011",
+     "hit_rate": 0.5656565656565656,
+     "flood_days": 99,
+     "false_alarms": 8
+    },
+    {
+     "gauge_id": "08006",
+     "hit_rate": 0.6081081081081081,
+     "flood_days": 74,
+     "false_alarms": 11
+    },
+    {
+     "gauge_id": "03005",
+     "hit_rate": 0.6090909090909091,
+     "flood_days": 110,
+     "false_alarms": 8
+    },
+    {
+     "gauge_id": "03109",
+     "hit_rate": 0.6222222222222222,
+     "flood_days": 45,
+     "false_alarms": 18
+    }
+   ]
+  }
+ },
+ "flood_threshold": "q95",
+ "comparison_common_days": {
+  "model": {
+   "1": {
+    "median_nse": 0.6450516668428875,
+    "median_kge": 0.6275468118908194
+   },
+   "2": {
+    "median_nse": 0.625445117728564,
+    "median_kge": 0.6167388091734382
+   },
+   "3": {
+    "median_nse": 0.6184680097952736,
+    "median_kge": 0.6230790639448804
+   },
+   "4": {
+    "median_nse": 0.6126168573974894,
+    "median_kge": 0.619889480571926
+   }
+  },
+  "climatology": {
+   "1": {
+    "median_nse": 0.23438963393584367,
+    "median_kge": 0.26470371038146606
+   },
+   "2": {
+    "median_nse": 0.2346465942807167,
+    "median_kge": 0.26465340141847493
+   },
+   "3": {
+    "median_nse": 0.23438405741965318,
+    "median_kge": 0.2646104947718742
+   },
+   "4": {
+    "median_nse": 0.23458667920659526,
+    "median_kge": 0.26455914859460533
+   }
+  },
+  "persistence": {
+   "1": {
+    "median_nse": 0.40158764831425464,
+    "median_kge": 0.7007902723039607
+   },
+   "2": {
+    "median_nse": 0.021380323658001577,
+    "median_kge": 0.5106858616757466
+   },
+   "3": {
+    "median_nse": -0.18191408346509508,
+    "median_kge": 0.4120399966886444
+   },
+   "4": {
+    "median_nse": -0.2474527030148863,
+    "median_kge": 0.3762718901652722
+   }
+  }
+ },
+ "comparison_flood_common_days": {
+  "model": {
+   "2": {
+    "flood_days": 3122,
+    "hits": 2313,
+    "misses": 809,
+    "false_alarms": 1498,
+    "pooled_hit_rate": 0.7408712363869314,
+    "pooled_false_alarm_ratio": 0.39307268433482023,
+    "median_hit_rate": 0.7446420428636571,
+    "median_false_alarm_ratio": 0.37933247753530164,
+    "gauges_without_any_alarm": 0,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "08011",
+      "hit_rate": 0.5151515151515151,
+      "flood_days": 99,
+      "false_alarms": 4
+     },
+     {
+      "gauge_id": "03073",
+      "hit_rate": 0.5333333333333333,
+      "flood_days": 105,
+      "false_alarms": 2
+     },
+     {
+      "gauge_id": "08006",
+      "hit_rate": 0.5540540540540541,
+      "flood_days": 74,
+      "false_alarms": 13
+     },
+     {
+      "gauge_id": "03109",
+      "hit_rate": 0.5555555555555556,
+      "flood_days": 45,
+      "false_alarms": 16
+     },
+     {
+      "gauge_id": "03081",
+      "hit_rate": 0.625,
+      "flood_days": 72,
+      "false_alarms": 16
+     }
+    ]
+   },
+   "3": {
+    "flood_days": 3120,
+    "hits": 2339,
+    "misses": 781,
+    "false_alarms": 1508,
+    "pooled_hit_rate": 0.7496794871794872,
+    "pooled_false_alarm_ratio": 0.39199376137249803,
+    "median_hit_rate": 0.7531460345332163,
+    "median_false_alarm_ratio": 0.3668831168831169,
+    "gauges_without_any_alarm": 0,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "08011",
+      "hit_rate": 0.5454545454545454,
+      "flood_days": 99,
+      "false_alarms": 8
+     },
+     {
+      "gauge_id": "03073",
+      "hit_rate": 0.5619047619047619,
+      "flood_days": 105,
+      "false_alarms": 2
+     },
+     {
+      "gauge_id": "03109",
+      "hit_rate": 0.5777777777777777,
+      "flood_days": 45,
+      "false_alarms": 18
+     },
+     {
+      "gauge_id": "08006",
+      "hit_rate": 0.6081081081081081,
+      "flood_days": 74,
+      "false_alarms": 14
+     },
+     {
+      "gauge_id": "03005",
+      "hit_rate": 0.6363636363636364,
+      "flood_days": 110,
+      "false_alarms": 10
+     }
+    ]
+   },
+   "4": {
+    "flood_days": 3120,
+    "hits": 2339,
+    "misses": 781,
+    "false_alarms": 1509,
+    "pooled_hit_rate": 0.7496794871794872,
+    "pooled_false_alarm_ratio": 0.39215176715176714,
+    "median_hit_rate": 0.7589753933037515,
+    "median_false_alarm_ratio": 0.375552608311229,
+    "gauges_without_any_alarm": 0,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "03073",
+      "hit_rate": 0.5333333333333333,
+      "flood_days": 105,
+      "false_alarms": 2
+     },
+     {
+      "gauge_id": "08011",
+      "hit_rate": 0.5656565656565656,
+      "flood_days": 99,
+      "false_alarms": 8
+     },
+     {
+      "gauge_id": "08006",
+      "hit_rate": 0.6081081081081081,
+      "flood_days": 74,
+      "false_alarms": 11
+     },
+     {
+      "gauge_id": "03005",
+      "hit_rate": 0.6090909090909091,
+      "flood_days": 110,
+      "false_alarms": 8
+     },
+     {
+      "gauge_id": "03109",
+      "hit_rate": 0.6222222222222222,
+      "flood_days": 45,
+      "false_alarms": 18
+     }
+    ]
+   }
+  },
+  "climatology": {
+   "2": {
+    "flood_days": 3122,
+    "hits": 679,
+    "misses": 2443,
+    "false_alarms": 1846,
+    "pooled_hit_rate": 0.21748878923766815,
+    "pooled_false_alarm_ratio": 0.7310891089108911,
+    "median_hit_rate": 0.12596655277827729,
+    "median_false_alarm_ratio": 0.75,
+    "gauges_without_any_alarm": 17,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "03073",
+      "hit_rate": 0.0,
+      "flood_days": 105,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "08011",
+      "hit_rate": 0.0,
+      "flood_days": 99,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "03107",
+      "hit_rate": 0.0,
+      "flood_days": 93,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "03103",
+      "hit_rate": 0.0,
+      "flood_days": 82,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "08036",
+      "hit_rate": 0.0,
+      "flood_days": 78,
+      "false_alarms": 0
+     }
+    ]
+   },
+   "3": {
+    "flood_days": 3120,
+    "hits": 679,
+    "misses": 2441,
+    "false_alarms": 1844,
+    "pooled_hit_rate": 0.21762820512820513,
+    "pooled_false_alarm_ratio": 0.730875941339675,
+    "median_hit_rate": 0.12596655277827729,
+    "median_false_alarm_ratio": 0.75,
+    "gauges_without_any_alarm": 17,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "03073",
+      "hit_rate": 0.0,
+      "flood_days": 105,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "08011",
+      "hit_rate": 0.0,
+      "flood_days": 99,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "03107",
+      "hit_rate": 0.0,
+      "flood_days": 93,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "03103",
+      "hit_rate": 0.0,
+      "flood_days": 82,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "08036",
+      "hit_rate": 0.0,
+      "flood_days": 78,
+      "false_alarms": 0
+     }
+    ]
+   },
+   "4": {
+    "flood_days": 3120,
+    "hits": 679,
+    "misses": 2441,
+    "false_alarms": 1842,
+    "pooled_hit_rate": 0.21762820512820513,
+    "pooled_false_alarm_ratio": 0.7306624355414518,
+    "median_hit_rate": 0.12596655277827729,
+    "median_false_alarm_ratio": 0.75,
+    "gauges_without_any_alarm": 17,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "03073",
+      "hit_rate": 0.0,
+      "flood_days": 105,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "08011",
+      "hit_rate": 0.0,
+      "flood_days": 99,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "03107",
+      "hit_rate": 0.0,
+      "flood_days": 93,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "03103",
+      "hit_rate": 0.0,
+      "flood_days": 82,
+      "false_alarms": 0
+     },
+     {
+      "gauge_id": "08036",
+      "hit_rate": 0.0,
+      "flood_days": 78,
+      "false_alarms": 0
+     }
+    ]
+   }
+  },
+  "persistence": {
+   "2": {
+    "flood_days": 3122,
+    "hits": 1655,
+    "misses": 1467,
+    "false_alarms": 1470,
+    "pooled_hit_rate": 0.5301089045483665,
+    "pooled_false_alarm_ratio": 0.4704,
+    "median_hit_rate": 0.5008341056533827,
+    "median_false_alarm_ratio": 0.49916589434661723,
+    "gauges_without_any_alarm": 0,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "03068",
+      "hit_rate": 0.0,
+      "flood_days": 16,
+      "false_alarms": 16
+     },
+     {
+      "gauge_id": "08005",
+      "hit_rate": 0.2558139534883721,
+      "flood_days": 43,
+      "false_alarms": 32
+     },
+     {
+      "gauge_id": "03031",
+      "hit_rate": 0.29545454545454547,
+      "flood_days": 44,
+      "false_alarms": 31
+     },
+     {
+      "gauge_id": "03109",
+      "hit_rate": 0.3111111111111111,
+      "flood_days": 45,
+      "false_alarms": 31
+     },
+     {
+      "gauge_id": "08029",
+      "hit_rate": 0.34146341463414637,
+      "flood_days": 41,
+      "false_alarms": 28
+     }
+    ]
+   },
+   "3": {
+    "flood_days": 3120,
+    "hits": 1382,
+    "misses": 1738,
+    "false_alarms": 1743,
+    "pooled_hit_rate": 0.44294871794871793,
+    "pooled_false_alarm_ratio": 0.55776,
+    "median_hit_rate": 0.4119621342512909,
+    "median_false_alarm_ratio": 0.5880378657487091,
+    "gauges_without_any_alarm": 0,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "03068",
+      "hit_rate": 0.0,
+      "flood_days": 16,
+      "false_alarms": 16
+     },
+     {
+      "gauge_id": "08005",
+      "hit_rate": 0.11627906976744186,
+      "flood_days": 43,
+      "false_alarms": 38
+     },
+     {
+      "gauge_id": "08029",
+      "hit_rate": 0.15,
+      "flood_days": 40,
+      "false_alarms": 36
+     },
+     {
+      "gauge_id": "08030",
+      "hit_rate": 0.1875,
+      "flood_days": 48,
+      "false_alarms": 39
+     },
+     {
+      "gauge_id": "03031",
+      "hit_rate": 0.20454545454545456,
+      "flood_days": 44,
+      "false_alarms": 35
+     }
+    ]
+   },
+   "4": {
+    "flood_days": 3120,
+    "hits": 1251,
+    "misses": 1869,
+    "false_alarms": 1874,
+    "pooled_hit_rate": 0.4009615384615385,
+    "pooled_false_alarm_ratio": 0.59968,
+    "median_hit_rate": 0.3737745098039216,
+    "median_false_alarm_ratio": 0.6282894736842105,
+    "gauges_without_any_alarm": 0,
+    "worst_hit_rate": [
+     {
+      "gauge_id": "08005",
+      "hit_rate": 0.046511627906976744,
+      "flood_days": 43,
+      "false_alarms": 41
+     },
+     {
+      "gauge_id": "03068",
+      "hit_rate": 0.0625,
+      "flood_days": 16,
+      "false_alarms": 15
+     },
+     {
+      "gauge_id": "08029",
+      "hit_rate": 0.1,
+      "flood_days": 40,
+      "false_alarms": 38
+     },
+     {
+      "gauge_id": "08030",
+      "hit_rate": 0.14583333333333334,
+      "flood_days": 48,
+      "false_alarms": 41
+     },
+     {
+      "gauge_id": "08013",
+      "hit_rate": 0.1590909090909091,
+      "flood_days": 44,
+      "false_alarms": 37
+     }
+    ]
+   }
+  }
+ },
+ "model_beats_baseline_gauges": {
+  "climatology": {
+   "1": {
+    "nse": 43,
+    "kge": 45
+   },
+   "2": {
+    "nse": 44,
+    "kge": 46
+   },
+   "3": {
+    "nse": 43,
+    "kge": 45
+   },
+   "4": {
+    "nse": 42,
+    "kge": 45
+   }
+  },
+  "persistence": {
+   "1": {
+    "nse": 35,
+    "kge": 15
+   },
+   "2": {
+    "nse": 44,
+    "kge": 25
+   },
+   "3": {
+    "nse": 45,
+    "kge": 31
+   },
+   "4": {
+    "nse": 45,
+    "kge": 34
+   }
+  }
+ }
+}

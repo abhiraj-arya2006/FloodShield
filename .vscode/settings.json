@@ -25,6 +25,5 @@
     "${workspaceFolder}/ml",
     "${workspaceFolder}/scripts"
   ],
-  "pyrefly.errors.missingImport": "ignore",
-  "python.analysis.diagnosticsSource": "Pylance + Pyrefly"
+  "pyrefly.errors.missingImport": "ignore"
 }

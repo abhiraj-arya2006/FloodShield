@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = []
 
+# Runtime dependencies are pinned in requirements.txt; install that first.
 [tool.setuptools.packages.find]
 where = [".", "src"]
 
@@ -24,7 +25,7 @@ missing-import = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
+pythonpath = [".", "src"]
 addopts = "-ra"
 
 [tool.ruff]

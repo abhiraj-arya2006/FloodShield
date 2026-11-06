@@ -1,4 +1,4 @@
-"""Compute-device selection (scaffold; not implemented).
+"""Compute-device selection.
 
 Policy: the Apple GPU via PyTorch MPS is the PRIMARY device for all training
 and inference. CPU is only a fallback.
@@ -14,6 +14,19 @@ and inference. CPU is only a fallback.
   back, because heavy fallback defeats the purpose of using the GPU.
 """
 
-# TODO: get_device(preferred="mps", fallback="cpu") -> torch.device, following the policy above.
-# TODO: get_dtype() -> torch.float32.
-# TODO: helper to log/count per-op CPU fallbacks when PYTORCH_ENABLE_MPS_FALLBACK is set.
+import logging
+
+import torch
+
+log = logging.getLogger(__name__)
+
+
+def get_device(preferred: str = "mps", fallback: str = "cpu") -> torch.device:
+    if preferred != "mps":
+        return torch.device(preferred)
+    if torch.backends.mps.is_built() and torch.backends.mps.is_available():
+        return torch.device("mps")
+    message = f"WARNING: MPS is not available; running on {fallback}. Training will be slow."
+    log.warning(message)
+    print(message, flush=True)
+    return torch.device(fallback)

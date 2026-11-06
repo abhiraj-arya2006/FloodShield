@@ -26,6 +26,11 @@ pyogrio==0.13.0
 # --- Data access ---
 requests==2.34.2
 requests-cache==1.3.3
+# IMD gridded rainfall / temperature, archive and real-time (MIT licence).
+# imdlib requires xarray and pytz; both pinned to the versions pip resolved.
+imdlib==0.4.0
+xarray==2026.9.0
+pytz==2026.5
 
 # --- Config / environment ---
 PyYAML==6.0.3
@@ -54,4 +59,6 @@ ruff==0.17.2
 # torch-geometric (+ torch-scatter, torch-sparse, ...): avoided to remove macOS
 #   install risk; graph layers will use plain-torch adjacency matrices.
 # xgboost: Phase 3 (residual correction) only; out of scope for this repo phase.
-# rasterio, netCDF4, xarray, h5py: not needed; inputs are shapefiles, CSV and JSON.
+# rasterio, netCDF4, h5py: not needed yet (xarray is installed only because
+#   imdlib requires it). NetCDF readers may be needed if NCMRWF NetCDF products
+#   are adopted later; see docs/live_data_options.md.

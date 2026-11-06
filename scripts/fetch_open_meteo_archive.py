@@ -1,12 +1,12 @@
-"""Fetch Open-Meteo archive (ERA5-based) daily weather for each selected gauge.
+"""Open-Meteo archive fetch: considered, NOT used.
 
-Not implemented yet.
+Training weather comes from the CAMELS-IND forcings (scripts/build_forcing_table.py).
+Kept only so the earlier Open-Meteo plan stays traceable; it does nothing.
 """
 
 
 def main() -> None:
-    # TODO: Read gauge coordinates and variables from configs/data.yaml; save raw JSON to data/raw/open_meteo.
-    raise NotImplementedError("fetch_open_meteo_archive.py is not implemented yet")
+    raise NotImplementedError("Open-Meteo is not used; see docs/live_data_options.md")
 
 
 if __name__ == "__main__":

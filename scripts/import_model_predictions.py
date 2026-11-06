@@ -106,7 +106,7 @@ def main() -> None:
                   for e in edges.itertuples()]
     (DATA_DIR / "edges.json").write_text(json.dumps(edge_items, indent=2), encoding="utf-8")
 
-    pd.DataFrame(gauge_items)[["gauge_id", "q90_m3s", "q95_m3s"]].to_csv(CONFIGS / "flow_thresholds.csv", index=False)
+    pd.DataFrame(gauge_items)[["gauge_id", "q90_m3s", "q95_m3s"]].to_csv(CONFIGS / "app_flow_thresholds.csv", index=False)
     meta = {
         "predictions": "stg_mamba",
         "run": RUN,

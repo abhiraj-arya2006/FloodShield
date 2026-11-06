@@ -64,7 +64,7 @@ class ReplaySource(DataSource):
         self.gauges_path = DATA_DIR / "gauges.json"
         self.edges_path = DATA_DIR / "edges.json"
         self.parquet_path = DATA_DIR / "replay_predictions.parquet"
-        self.thresholds_path = CONFIGS_DIR / "flow_thresholds.csv"
+        self.thresholds_path = CONFIGS_DIR / "app_flow_thresholds.csv"
         self.policy_path = CONFIGS_DIR / "river_alert_policy.yaml"
         self.model_info_path = CONFIGS_DIR / "model_info.yaml"
 

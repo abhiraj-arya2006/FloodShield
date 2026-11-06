@@ -1,28 +1,91 @@
-# STG-Mamba model configuration (placeholder; model not implemented).
+# STG-Mamba model configuration (model not implemented). ALL VALUES PROPOSED.
 
 device: mps            # PRIMARY device: Apple GPU via PyTorch MPS
 fallback_device: cpu   # used only if MPS is unavailable (logged as a WARNING)
 dtype: float32         # float32 only on MPS (no float64, no float16/bfloat16)
 
 input:
-  window_days: null    # TODO: input window length (keep short: days to a few weeks)
-  dynamic_features: [] # TODO: weather variables (see configs/data.yaml open_meteo.daily_variables)
-  static_features: []  # TODO: selected CAMELS-IND static catchment attributes
+  window_days: 90      # L: past window, days t-L+1..t (t = sample date)
+  # The model is weather-driven: NO past observed streamflow is an input.
+
+  # Dynamic (daily) input variables. Names are the CAMELS-IND forcing columns
+  # (data/processed/camels_forcings_selected.parquet; units in
+  # camels_forcings_selected_units.json). Change this list to change the model
+  # inputs; nothing else hard-codes variable names.
+  #
+  # Default: only variables with a VERIFIED live source (IMD real-time gridded
+  # data via imdlib; see docs/live_data_options.md):
+  #   prcp  mm/day  IMD rainfall 0.25 deg (live: same grid, ~1 day lag)
+  #   tmax  C       IMD temperature 1 deg   (live: 0.5 deg grid, ~1-2 day lag)
+  #   tmin  C       IMD temperature 1 deg   (live: 0.5 deg grid, ~1 day lag)
+  #   tavg  C       (tmax + tmin) / 2, derived the same way live
+  feature_list: [prcp, tmax, tmin, tavg]
+
+  # Every CAMELS-IND forcing column, for offline experiments only. The columns
+  # not in feature_list have NO verified live source yet:
+  #   IMDAA (reanalysis, ends 2020 on NCMRWF RDS): srad_lw, srad_sw, wind_u,
+  #     wind_v, wind, rel_hum, evap_canopy, evap_surface, sm_lvl1..sm_lvl4
+  #   GLEAM (yearly releases, no near-real-time): pet_gleam, aet_gleam
+  #   Singer et al. (2021) hourly PET from ERA5-Land: pet (missing in 1980)
+  feature_list_all_camels: [prcp, tmax, tmin, tavg, srad_lw, srad_sw, wind_u, wind_v,
+                            wind, rel_hum, pet, pet_gleam, aet_gleam, evap_canopy,
+                            evap_surface, sm_lvl1, sm_lvl2, sm_lvl3, sm_lvl4]
+
+  # Future covariate for days t+1..t+H: rain only (configs/training.yaml future_rain).
+  future_features: [prcp]
+
+  # Static catchment features (standardised across gauges). Sources:
+  # attributes_csv/camels_ind_<source>.csv, or "forcings_train" = computed from
+  # the CAMELS forcings over the TRAIN period only. Nothing derived from
+  # observed streamflow (see static_excluded_*).
+  static_features:
+    - {name: log10_area_km2,   source: topo, column: ghi_area,        transform: log10}  # GHI area, km2
+    - {name: elev_mean_m,      source: topo, column: elev_mean,       transform: none}   # SRTM, m
+    - {name: slope_mean_pct,   source: topo, column: slope_mean,      transform: none}   # SRTM, %
+    - {name: num_dams,         source: anth, column: num_dams,        transform: log1p}  # large+medium dams (IndiaWRIS)
+    - {name: total_storage_m3, source: anth, column: total_storage,   transform: log1p}  # reservoir storage, m3
+    - {name: crops_frac_2005,  source: anth, column: crops_frac_2005, transform: none}   # cropland fraction 2005 (Roy et al., 2015)
+    - {name: urban_frac_2005,  source: anth, column: urban_frac_2005, transform: none}   # urban fraction 2005
+    - {name: trees_frac,       source: land, column: trees_frac,      transform: none}   # tree cover 2017-2022 (Sentinel-2)
+    - {name: water_frac,       source: land, column: water_frac,      transform: none}   # water cover 2017-2022
+    - {name: soil_depth_m,     source: soil, column: soil_depth,      transform: none}   # Pelletier et al. 2016, m
+    - {name: sand_frac_top,    source: soil, column: sand_frac_top,   transform: none}   # HWSD v2.0, %
+    - {name: clay_frac_top,    source: soil, column: clay_frac_top,   transform: none}   # HWSD v2.0, %
+    - {name: p_mean_train,     source: forcings_train, column: p_mean,         transform: none}  # mm/day
+    - {name: high_prec_freq_train, source: forcings_train, column: high_prec_freq, transform: none}  # days/yr >= 5x p_mean
+    - {name: aridity_p_pet_train,  source: forcings_train, column: aridity_p_pet,  transform: none}  # P / PET (Singer pet)
+    - {name: tavg_mean_train,  source: forcings_train, column: tavg_mean,      transform: none}  # C
+
+  # Never used as static inputs (derived from, or selected on, observed streamflow).
+  static_excluded_files: [hydro]   # camels_ind_hydro.csv: all hydrological signatures
+  static_excluded_columns:
+    - reservoir_index      # total storage / multi-year annual STREAMFLOW
+    - flow_availability    # share of days with streamflow data
+    - ghi_group            # GHI group assigned from streamflow adequacy
+    - lstm_pred_streamflow # authors' LSTM streamflow predictions (file, listed for completeness)
 
 graph:
-  nodes: gauges                  # one node per selected gauge
-  edges: upstream_to_downstream  # derived from HydroRIVERS
-  directed: true
-  self_loops: null               # TODO
-  normalization: null            # TODO
+  nodes: gauges                  # the 46 gauges in configs/selected_gauges.csv
+  edges_file: ./configs/graph_edges.csv   # upstream -> downstream, river_km (scripts/build_graph.py)
+  enabled: true                  # false = no cross-gauge information (ablation)
+  direction: downstream          # downstream | both
+  layers: 2                      # one layer reaches one edge further
+  distance_scale_km: 100.0       # edge attribute = river_km / this
 
 model:
-  hidden_dim: null     # TODO
-  state_dim: null      # TODO (Mamba SSM state size)
-  num_layers: null     # TODO
-  dropout: null        # TODO
+  # Sizes are PROPOSED. Static features are projected and ADDED to every step's
+  # projected input (see src/floodshield/models/stg_mamba.py).
+  d_model: 32          # per-step hidden size
+  d_state: 8           # Mamba SSM state size per channel
+  expand: 2            # inner channels = expand * d_model
+  d_conv: 4            # causal depthwise conv kernel
+  dt_min: 0.001        # initial SSM step size range (log-uniform), as in the original
+  dt_max: 0.1          # Mamba code; sets how long memory lasts before training
+  num_layers: 2        # Mamba blocks; weights shared across gauges
+  dropout: 0.1
+  head_hidden: 64
+  decoder: last_step   # last_step | per_lead (see src/floodshield/models/stg_mamba.py)
 
 output:
-  target: streamflow
-  # PROPOSED, not final.
-  forecast_horizon_days: [1, 2, 3]
+  target: streamflow   # m3/s; trained as log1p, standardised per gauge
+  horizon_days: 4      # H: targets for days t+1..t+H

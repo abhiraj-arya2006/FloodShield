@@ -1,5 +1,7 @@
-"""Loader for Open-Meteo archive (training) and forecast (live) weather responses."""
+"""Open-Meteo loader: considered, NOT used.
 
-# TODO: Parse daily weather JSON for each gauge location into a tidy table.
-# TODO: Use identical variable names for archive and forecast; verify them in the docs.
-# TODO: Cache responses on disk (data/raw/open_meteo) and respect API rate limits.
+Training weather comes from the CAMELS-IND forcings (IMD / IMDAA) and live
+weather from IMD real-time grids plus forecast rain (docs/live_data_options.md).
+This module is kept only so the earlier Open-Meteo plan stays traceable; do not
+add code here.
+"""

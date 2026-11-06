@@ -1,0 +1,81 @@
+{
+ "split": "test",
+ "members": [
+  "stg_mamba_perlead_hf5",
+  "stg_mamba_perlead_hf5_s1",
+  "stg_mamba_perlead_hf5_s2"
+ ],
+ "alert_margin": 0.1,
+ "alert_margin_selection": "Set manually by the user on 2026-11-04. This overrides the selection rule; 0.10 does not meet its hit-rate target of 0.90.",
+ "definition": "alert if forecast_m3s >= q95 * (1 - alert_margin); dimensionless fraction of the gauge's training-year q95 (configs/flow_thresholds.csv). One value for all gauges and leads.",
+ "flood_day": "observed_m3s > q95",
+ "threshold": "q95",
+ "excluded_gauges": [
+  "03030",
+  "03056",
+  "08029",
+  "03109",
+  "08020"
+ ],
+ "future_rain_mode": "observed",
+ "git_head": "d5d52dd56bbb04c3018a27fa1413562ced61d0b7",
+ "inputs_sha256": {
+  "checkpoints/stg_mamba_perlead_hf5_best.pt": "6552c35243fa881fc5b348acf87a7e609b8ad3e1e6a25abf6d4d8345c85783ee",
+  "checkpoints/stg_mamba_perlead_hf5_s1_best.pt": "7103b57b564b238c65adcf49cde7e21d6cb38a3b651c89e64dc92059eefceed7",
+  "checkpoints/stg_mamba_perlead_hf5_s2_best.pt": "a75ecdf997bef41f9d3ec37170248b5fec69b9f71cf4cd3062cde59609f5437c",
+  "configs/alert_margin_final.yaml": "e585106c9ce666d1f156c03321d48a2f811d0b5dfff94ad53b1a422878d7e84b",
+  "configs/flow_thresholds.csv": "0a7f0884d55e2ea7f99a50445ecfec5015563e88df765adea8c9a5a35ffdcd5a",
+  "data/processed/training/normalisers.json": "198d26ae0a81161fb942833f29c5b3604d4d89052dc3936292edd9d626010f70"
+ },
+ "samples": 2188,
+ "sample_dates": [
+  "2012-12-31",
+  "2018-12-27"
+ ],
+ "target_dates": [
+  "2013-01-01",
+  "2018-12-31"
+ ],
+ "flood_days": {
+  "all_46": {
+   "distinct_gauge_days_observed": 90188,
+   "distinct_flood_gauge_days": 4105,
+   "flood_share_of_observed_days": 0.04551603317514525,
+   "by_year": {
+    "2013": 1644,
+    "2014": 708,
+    "2015": 247,
+    "2016": 713,
+    "2017": 235,
+    "2018": 558
+   },
+   "gauges_below_min_events": [],
+   "flood_days_by_lead": {
+    "2": 4105,
+    "3": 4105,
+    "4": 4105
+   }
+  },
+  "excl_5_41": {
+   "distinct_gauge_days_observed": 80658,
+   "distinct_flood_gauge_days": 3511,
+   "flood_share_of_observed_days": 0.043529470108358746,
+   "by_year": {
+    "2013": 1424,
+    "2014": 628,
+    "2015": 223,
+    "2016": 546,
+    "2017": 204,
+    "2018": 486
+   },
+   "gauges_below_min_events": [],
+   "flood_days_by_lead": {
+    "2": 3511,
+    "3": 3511,
+    "4": 3511
+   }
+  }
+ },
+ "same_as_yesterday_definition": "repeats observed flow on forecast date t at every lead",
+ "seasonal_average_definition": "training-year calendar mean, centred 15-day window"
+}
