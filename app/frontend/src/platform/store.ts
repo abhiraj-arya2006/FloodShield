@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { create } from 'zustand';
-import { fetchDates, fetchEdges, fetchForecast, fetchGauges } from '../services/api';
+import { fetchEdges, fetchForecast, fetchGauges } from '../services/api';
 import { AlertStatus, EdgeItem, GaugeForecastRow, GaugeItem } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -11,7 +11,13 @@ export const DEFAULT_START = '2013-07-09';
 const SERVICE_DOWN = "The forecast service isn't responding. Start the backend on port 8000, then try again.";
 /* The model's archive has no forecast for some dates, which is different from the service being down. */
 export const forecastError = (err: Error) =>
-  err.message.startsWith('No forecast') ? 'No forecast was made for this date. Choose a date from 2009 to 2018.' : SERVICE_DOWN;
+  err.message.startsWith('No forecast') ? 'No forecast was made for this date. Reload the page to get the latest one.' : SERVICE_DOWN;
+
+/* Real rises from the held-back test years, one clean and one with false alerts and misses. */
+export const REAL_FLOODS = [
+  { start: '2014-09-18', en: 'Sep 2014', hi: 'सितं 2014' },
+  { start: '2013-07-09', en: 'Jul 2013', hi: 'जुला 2013' },
+];
 
 export type ForecastMode = 'live' | 'past';
 export interface LiveInfo { made_on: string; generated_at: string; stale: boolean; weather: string; }
@@ -24,9 +30,9 @@ interface ForecastState {
   liveFailed: boolean;
   start: string;
   day: number;
-  setStart: (start: string) => void;
   setDay: (day: number) => void;
   setMode: (mode: ForecastMode) => void;
+  openFlood: (start: string) => void;
   loadLive: () => Promise<void>;
 }
 export const useForecastStore = create<ForecastState>((set, get) => ({
@@ -36,13 +42,13 @@ export const useForecastStore = create<ForecastState>((set, get) => ({
   liveFailed: false,
   start: DEFAULT_START,
   day: 1,
-  setStart: (start) => set({ start }),
   setDay: (day) => set({ day }),
   setMode: (mode) => {
     const { live } = get();
     if (mode === 'live' && live) set({ mode, start: live.made_on, day: 1 });
     else set({ mode: 'past', start: DEFAULT_START, day: 4 });
   },
+  openFlood: (start) => set({ mode: 'past', start, day: 1 }),
   /* Runs the model on today's weather. If that fails, past years still work. */
   loadLive: async () => {
     try {
@@ -85,7 +91,7 @@ export function useText() {
 
 export const flow = (n: number) => Math.round(n).toLocaleString('en-IN');
 
-interface Network { gauges: GaugeItem[]; edges: EdgeItem[]; min: string; max: string; }
+interface Network { gauges: GaugeItem[]; edges: EdgeItem[]; }
 let networkCache: Promise<Network> | null = null;
 
 export function useNetwork() {
@@ -96,11 +102,9 @@ export function useNetwork() {
     let live = true;
     setError(null);
     if (!networkCache) {
-      networkCache = Promise.all([fetchGauges(), fetchEdges(), fetchDates()]).then(([g, e, d]) => ({
+      networkCache = Promise.all([fetchGauges(), fetchEdges()]).then(([g, e]) => ({
         gauges: g.gauges,
         edges: e.edges,
-        min: addDays(d.min_date, -1),
-        max: addDays(d.max_date, -LAST_DAY),
       }));
       networkCache.catch(() => { networkCache = null; });
     }

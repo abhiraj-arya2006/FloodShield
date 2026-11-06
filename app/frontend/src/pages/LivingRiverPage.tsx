@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchDates, fetchEdges, fetchForecast, fetchGauges } from '../services/api';
+import { fetchEdges, fetchForecast, fetchGauges } from '../services/api';
 import { AlertStatus, EdgeItem, GaugeForecastRow, GaugeItem } from '../types';
 import { PlatformNav } from '../platform/PlatformNav';
 import { clockTime, forecastError, useForecastStore, useSourceNote, useText } from '../platform/store';
@@ -127,8 +127,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
   const { L, date, statusWord } = useText();
   const [gauges, setGauges] = useState<GaugeItem[]>([]);
   const [edges, setEdges] = useState<EdgeItem[]>([]);
-  const [range, setRange] = useState<{ min: string; max: string } | null>(null);
-  const { start, setStart, ready, mode, live: liveInfo } = useForecastStore();
+  const { start, ready, mode, live: liveInfo } = useForecastStore();
   const note = useSourceNote();
   const [rows, setRows] = useState<DayRows | null>(null);
   const [day, setDay] = useState(1);
@@ -158,12 +157,11 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
   useEffect(() => {
     let live = true;
     setError(null);
-    Promise.all([fetchGauges(), fetchEdges(), fetchDates()])
-      .then(([g, e, d]) => {
+    Promise.all([fetchGauges(), fetchEdges()])
+      .then(([g, e]) => {
         if (!live) return;
         setGauges(g.gauges);
         setEdges(e.edges);
-        setRange({ min: addDays(d.min_date, -1), max: addDays(d.max_date, -LAST_DAY) });
       })
       .catch(() => live && setError(L("The river network didn't load. Start the backend on port 8000, then try again.", 'नदी नेटवर्क लोड नहीं हुआ। पोर्ट 8000 पर बैकएंड चालू करें और फिर कोशिश करें।')));
     return () => { live = false; };
@@ -386,18 +384,7 @@ export const LivingRiverPage: React.FC<{ hold?: boolean; embedded?: boolean }> =
           </div>
           <div className="lr-actions">
             <button type="button" onClick={() => { setDay(1); playSweep(); }} disabled={!rows}>{L('Play four days', 'चार दिन चलाएँ')}</button>
-            {mode === 'past' ? (
-            <label>
-              {L('Forecast made on', 'पूर्वानुमान की तारीख')}
-              <input
-                type="date"
-                value={start}
-                min={range?.min}
-                max={range?.max}
-                onChange={(e) => e.target.value && setStart(e.target.value)}
-              />
-            </label>
-            ) : liveInfo && (
+            {mode === 'live' && liveInfo && (
               <p className="lr-updated">{L(`Forecast made ${date(liveInfo.made_on)}, updated ${clockTime(liveInfo.generated_at)} IST`, `${date(liveInfo.made_on)} को बना, ${clockTime(liveInfo.generated_at)} IST पर अपडेट`)}</p>
             )}
           </div>

@@ -163,8 +163,6 @@
 .pf-days span:last-child { font-size: 0.875rem; color: var(--pf-mist); }
 .pf-day-bar { display: flex; align-items: flex-end; width: 100%; height: 34px; padding: 0 28%; }
 .pf-day-bar i { display: block; width: 100%; border-radius: 6px; background: linear-gradient(var(--pf-warn), rgba(255, 77, 125, 0.35)); transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-.pf-date { display: grid; gap: 0.15rem; font-size: 0.9rem; color: var(--pf-foam); text-shadow: 0 1px 8px rgba(6, 25, 42, 0.9); }
-.pf-date input { min-height: 44px; padding: 0 0.8rem; border-radius: 999px; border: 1px solid var(--pf-line); background: var(--pf-glass); color-scheme: dark; backdrop-filter: blur(14px); }
 .pf-left .pf-chips { background: var(--pf-glass); backdrop-filter: blur(14px); }
 
 .pf-right {
@@ -460,3 +458,25 @@
 .pf-live-skill td { font-weight: 600; }
 
 .pf-list-note { padding: 0.15rem 0.6rem 0.45rem; color: var(--pf-mist); font-size: 0.925rem; }
+
+/* Real-flood replay: warnings set beside what the rivers really did. */
+.pf-flood-cta { display: flex; align-items: center; gap: 0.5rem; width: 100%; margin: 0.7rem 0 0.2rem; padding: 0.6rem 0.8rem; border: 1px solid var(--pf-line); border-radius: 0.7rem; background: rgba(255, 77, 125, 0.14); color: inherit; font: inherit; font-weight: 600; font-size: 0.925rem; text-align: left; cursor: pointer; transition: background 0.2s; }
+.pf-flood-cta:hover { background: rgba(255, 77, 125, 0.26); }
+.pf-floods { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; margin: 0.6rem 0 0.2rem; font-size: 0.925rem; }
+.pf-floods > span { color: var(--pf-mist); margin-right: 0.2rem; }
+.pf-floods button { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.65rem; border: 1px solid var(--pf-line); border-radius: 999px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.pf-floods button.is-on { background: rgba(255, 77, 125, 0.22); border-color: #FF4D7D; }
+.pf-check { padding: 0.75rem 0.85rem; margin-bottom: 0.7rem; border: 1px solid var(--pf-line); border-radius: 0.8rem; background: rgba(255, 255, 255, 0.04); }
+.pf-check h2 { margin: 0 0 0.55rem; font-size: 0.95rem; font-weight: 600; }
+.pf-check dl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin: 0; }
+.pf-check dl > div { display: flex; flex-direction: column-reverse; justify-content: flex-end; gap: 0.1rem; }
+.pf-check dt { color: var(--pf-mist); font-size: 0.8rem; line-height: 1.25; }
+.pf-check dd { margin: 0; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pf-check .is-hit dd { color: #5EE0A8; }
+.pf-check .is-false dd { color: #F5B921; }
+.pf-check .is-missed dd { color: #FF4D7D; }
+.pf-check p { margin: 0.5rem 0 0; color: var(--pf-mist); font-size: 0.825rem; line-height: 1.4; }
+.pf-outcome { flex: none; padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.pf-outcome.is-hit { background: rgba(94, 224, 168, 0.16); color: #5EE0A8; }
+.pf-outcome.is-false { background: rgba(245, 185, 33, 0.16); color: #F5B921; }
+.pf-outcome.is-missed { background: rgba(255, 77, 125, 0.16); color: #FF4D7D; }

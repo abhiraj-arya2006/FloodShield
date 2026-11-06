@@ -88,16 +88,6 @@
   cursor: pointer;
 }
 .lr-actions > button:disabled { opacity: 0.5; cursor: default; }
-.lr-actions label { display: grid; gap: 0.25rem; color: var(--foam-dim); }
-.lr-actions input[type='date'] {
-  background: var(--slate-deep);
-  color: var(--foam);
-  border: 1px solid var(--foam-dim);
-  border-radius: 3px;
-  padding: 0.5rem 0.6rem;
-  font: inherit;
-  color-scheme: dark;
-}
 
 .lr-lower {
   display: grid;

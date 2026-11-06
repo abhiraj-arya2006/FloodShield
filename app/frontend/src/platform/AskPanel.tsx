@@ -70,7 +70,7 @@ export const AskPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         update(res.status === 429
           ? L('Too many questions in a short time. Wait a minute, then ask again.', 'कम समय में बहुत सारे सवाल। एक मिनट रुककर फिर पूछें।')
           : res.status === 404
-            ? L('No forecast was made for this date. Choose a date from 2009 to 2018.', 'इस तारीख का पूर्वानुमान नहीं है। 2009 से 2018 की कोई तारीख चुनें।')
+            ? L('No forecast was made for this date. Reload the page to get the latest one.', 'इस तारीख का पूर्वानुमान नहीं है। नया पूर्वानुमान पाने के लिए पेज दोबारा लोड करें।')
             : L("The forecast service isn't responding. Start the backend, then ask again.", 'पूर्वानुमान सेवा जवाब नहीं दे रही। बैकएंड चालू करके फिर पूछें।'));
         return;
       }

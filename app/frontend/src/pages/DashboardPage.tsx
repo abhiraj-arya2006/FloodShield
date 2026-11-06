@@ -3,12 +3,22 @@ import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { Maximize2, Minus, Pause, Play, Plus, Search, X } from 'lucide-react';
 import { AlertStatus, GaugeForecastRow } from '../types';
-import { DAYS, LAST_DAY, addDays, clockTime, countStatus, flow, useForecastStore, useFourDays, useNetwork, useShortDate, useSourceNote, useText } from '../platform/store';
+import { DAYS, LAST_DAY, REAL_FLOODS, addDays, clockTime, countStatus, flow, useForecastStore, useFourDays, useNetwork, useShortDate, useSourceNote, useText } from '../platform/store';
 import { LoadError } from '../platform/PlatformNav';
 
 const COLORS: Record<AlertStatus, string> = { OK: '#D9A95C', WATCH: '#F5B921', WARNING: '#FF4D7D' };
 
 /* Map views, in degrees of longitude and latitude. All share one shape, so the zoom never distorts. */
+/* Scored the same way as the published results: a flood day is recorded flow above the gauge's q95. */
+type Outcome = 'hit' | 'false' | 'missed' | 'quiet' | 'unknown';
+const outcomeOf = (r: GaugeForecastRow): Outcome => {
+  const warned = r.status === 'WARNING';
+  if (!r.mask || r.observed_m3s == null) return 'unknown';
+  const flood = r.observed_m3s > r.q95_m3s;
+  if (warned) return flood ? 'hit' : 'false';
+  return flood ? 'missed' : 'quiet';
+};
+
 const VIEW_RATIO = 1.895;
 const VIEWS: Record<string, { lon: number; lat: number; width: number }> = {
   ALL: { lon: 80.7, lat: 20.2, width: 22 },
@@ -18,7 +28,7 @@ const VIEWS: Record<string, { lon: number; lat: number; width: number }> = {
 
 export const DashboardPage: React.FC = () => {
   const { L, date, statusWord } = useText();
-  const { start, day, setStart, setDay, mode, live, ready, liveFailed } = useForecastStore();
+  const { start, day, setDay, mode, live, ready, liveFailed, openFlood } = useForecastStore();
   const note = useSourceNote();
   const shortDate = useShortDate();
   const { network, error: netError, retry: retryNet } = useNetwork();
@@ -35,6 +45,16 @@ export const DashboardPage: React.FC = () => {
   const firstView = useRef(true);
   const [zoom, setZoom] = useState(1);
   const [shownWarnings, setShownWarnings] = useState(0);
+  const loaded = Boolean(rows);
+
+  /* Replays a real rise from its first day, so the warnings can be watched building. */
+  const playFlood = (floodStart: string) => {
+    setSelectedId(null);
+    setFilter('ALL');
+    setQuery('');
+    openFlood(floodStart);
+    setPlaying(true);
+  };
 
   /* Keep marks the same size on screen at any zoom. */
   const applyView = () => {
@@ -82,14 +102,14 @@ export const DashboardPage: React.FC = () => {
   }, [setDay]);
 
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || !loaded) return;
     const timer = window.setInterval(() => {
       const current = useForecastStore.getState().day;
       if (current >= LAST_DAY) setPlaying(false);
       else setDay(current + 1);
     }, 1300);
     return () => window.clearInterval(timer);
-  }, [playing, setDay]);
+  }, [playing, loaded, setDay]);
 
   const shownDate = addDays(start, day);
   const today = rows?.[day];
@@ -100,7 +120,9 @@ export const DashboardPage: React.FC = () => {
     const counter = { value: shownWarnings };
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const tween = gsap.to(counter, { value: warnings, duration: still ? 0 : 0.6, ease: 'power2.out', onUpdate: () => setShownWarnings(Math.round(counter.value)) });
-    return () => { tween.kill(); };
+    /* The animation stalls when a browser is short of frames, and the headline must still end up right. */
+    const settle = window.setTimeout(() => { tween.kill(); setShownWarnings(warnings); }, 700);
+    return () => { tween.kill(); window.clearTimeout(settle); };
     // eslint-disable-next-line
   }, [warnings]);
 
@@ -133,6 +155,21 @@ export const DashboardPage: React.FC = () => {
       .slice(0, 8)
       .map((r) => r.gauge_id));
   }, [today]);
+
+  /* In past years the real river is known, so every warning on the shown day can be checked. */
+  const check = useMemo(() => {
+    if (mode !== 'past' || !today) return null;
+    const shown = [...today.values()].filter((r) => inBasin(r));
+    const count = (o: Outcome) => shown.filter((r) => outcomeOf(r) === o);
+    return {
+      hit: count('hit').length,
+      false: count('false').length,
+      missed: count('missed'),
+      unread: shown.filter((r) => r.status === 'WARNING' && outcomeOf(r) === 'unknown').length,
+    };
+    // eslint-disable-next-line
+  }, [mode, today, basin]);
+  const quietWeek = mode === 'live' && rows && DAYS.every((k) => countStatus(rows, k, 'WARNING') === 0);
 
   const selected: GaugeForecastRow | undefined = selectedId ? today?.get(selectedId) : undefined;
   const px = (n: number) => n * unit;
@@ -227,6 +264,23 @@ export const DashboardPage: React.FC = () => {
 
         {loadError && <LoadError message={loadError} onRetry={() => { retry(); retryNet(); }} />}
 
+        {quietWeek && (
+          <button type="button" className="pf-flood-cta" onClick={() => playFlood(REAL_FLOODS[0].start)}>
+            <Play size={15} aria-hidden="true" />
+            {L('The rivers are quiet. Watch it warn in a real flood', 'नदियाँ शांत हैं। असली बाढ़ में चेतावनी देखें')}
+          </button>
+        )}
+        {mode === 'past' && (
+          <div className="pf-floods" role="group" aria-label={L('Real floods', 'असली बाढ़')}>
+            <span>{L('Real floods', 'असली बाढ़')}</span>
+            {REAL_FLOODS.map((f) => (
+              <button key={f.start} type="button" className={start === f.start ? 'is-on' : ''} aria-pressed={start === f.start} onClick={() => playFlood(f.start)}>
+                <Play size={12} aria-hidden="true" />{L(f.en, f.hi)}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className="pf-days" role="group" aria-label={L('Forecast day', 'पूर्वानुमान का दिन')}>
           {DAYS.map((k) => {
             const count = countStatus(rows, k, 'WARNING');
@@ -254,12 +308,7 @@ export const DashboardPage: React.FC = () => {
             {playing ? <Pause size={16} aria-hidden="true" /> : <Play size={16} aria-hidden="true" />}
             {playing ? L('Pause', 'रोकें') : L('Play four days', 'चार दिन चलाएँ')}
           </button>
-          {mode === 'past' ? (
-            <label className="pf-date">
-              <span>{L('Forecast made on', 'पूर्वानुमान की तारीख')}</span>
-              <input type="date" value={start} min={network?.min} max={network?.max} onChange={(e) => e.target.value && setStart(e.target.value)} />
-            </label>
-          ) : live && (
+          {mode === 'live' && live && (
             <p className="pf-updated">
               <b>{L(`Forecast made ${date(live.made_on)}`, `${date(live.made_on)} को बना पूर्वानुमान`)}</b>
               {live.stale ? L(`Refresh failed. Last updated ${clockTime(live.generated_at)} IST`, `ताज़ा नहीं हो सका। पिछला अपडेट ${clockTime(live.generated_at)} IST`) : L(`Updated ${clockTime(live.generated_at)} IST`, `${clockTime(live.generated_at)} IST पर अपडेट`)}
@@ -298,6 +347,20 @@ export const DashboardPage: React.FC = () => {
           <p className="pf-sub pf-hint">{L('Point at any gauge on the map to read its forecast.', 'पूर्वानुमान पढ़ने के लिए नक्शे पर किसी गेज पर जाएँ।')}</p>
         )}
 
+        {check && (
+          <section className="pf-check" aria-label={L('Did the warnings come true?', 'क्या चेतावनियाँ सही निकलीं?')}>
+            <h2>{L(`What the rivers really did on ${shortDate(shownDate)}`, `${shortDate(shownDate)} को नदियों में असल में क्या हुआ`)}</h2>
+            <dl>
+              <div className="is-hit"><dt>{L('Warnings that came true', 'सही निकली चेतावनियाँ')}</dt><dd>{check.hit}</dd></div>
+              <div className="is-false"><dt>{L('False alerts', 'गलत अलर्ट')}</dt><dd>{check.false}</dd></div>
+              <div className="is-missed"><dt>{L('Floods missed', 'चूकी हुई बाढ़')}</dt><dd>{check.missed.length}</dd></div>
+            </dl>
+            {check.missed.length > 0 && <p>{L('Missed:', 'चूके:')} {check.missed.map((r) => r.name).join(', ')}</p>}
+            {check.unread > 0 && <p>{L(`${check.unread} more warned ${check.unread === 1 ? 'gauge has' : 'gauges have'} no river reading, so ${check.unread === 1 ? 'it isn\'t' : 'they aren\'t'} counted.`, `${check.unread} और चेतावनी वाले गेज का नदी माप नहीं है, इसलिए वे नहीं गिने गए।`)}</p>}
+            <p>{L('One date, not the overall score. Across 2013 to 2018 the model caught about 74% of flood days, with about 38% of alerts false.', 'यह एक तारीख है, कुल स्कोर नहीं। 2013 से 2018 में मॉडल ने लगभग 74% बाढ़ दिन पकड़े, लगभग 38% अलर्ट गलत रहे।')}</p>
+          </section>
+        )}
+
         <div className="pf-listhead">
           <label className="pf-search">
             <Search size={16} aria-hidden="true" />
@@ -318,6 +381,9 @@ export const DashboardPage: React.FC = () => {
               <button type="button" className={r.gauge_id === selectedId ? 'is-on' : ''} onClick={() => setSelectedId(r.gauge_id)}>
                 <span className={`pf-dot is-${r.status}`} aria-hidden="true" />
                 <span className="pf-list-name">{r.name}<small>{r.river}</small></span>
+                {mode === 'past' && r.status === 'WARNING' && outcomeOf(r) === 'hit' && <span className="pf-outcome is-hit">{L('Came true', 'सही')}</span>}
+                {mode === 'past' && r.status === 'WARNING' && outcomeOf(r) === 'false' && <span className="pf-outcome is-false">{L('False alert', 'गलत')}</span>}
+                {mode === 'past' && outcomeOf(r) === 'missed' && <span className="pf-outcome is-missed">{L('Missed', 'चूका')}</span>}
                 <span className="pf-list-pct">{Math.round((r.predicted_m3s / r.q95_m3s) * 100)}%</span>
               </button>
             </li>
